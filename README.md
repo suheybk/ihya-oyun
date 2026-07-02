@@ -1,5 +1,7 @@
 # İhya — Evden Dünyaya
 
+> 🎮 **Hemen oyna:** https://suheybk.github.io/ihya-oyun/
+
 Mobil tarayıcıda **indirmeden** oynanan, 3D İslami "ihyâ" oyunu. Kendi nefsinden başlayarak
 hâneyi, bahçeyi, mahalleyi, camiyi ve şehri Allah'ın rızâsıyla ihyâ etme şuurunu oyunlaştırır.
 Her görevde âyet/hadis delili vardır.
