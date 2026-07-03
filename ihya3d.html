@@ -929,15 +929,15 @@ function setLeg(o,t){ if(o) o.rotation.x += (t-o.rotation.x)*0.3; }
 function restLegs(L){ if(L){ setLeg(L.FL,0); setLeg(L.FR,0); setLeg(L.BL,0); setLeg(L.BR,0); } }
 function updateAnimals(dt){
   for(const an of animals){
-    const g=an.rec.g; if(!g.visible) continue;
+    const g=an.rec.g;
+    const c=an.is.c, rmax=an.is.r-2.0;   // KENDİ adasının güvenli iç yarıçapı (geniş pay)
+    // KOŞULSUZ SINIR: her kare, görünür/görünmez/duraklamış fark etmeksizin ada içine sıkıştır → kaçış imkânsız
+    { const ddx=g.position.x-c[0], ddz=g.position.z-c[1], dd=ddx*ddx+ddz*ddz;
+      if(dd>rmax*rmax){ const dl=Math.sqrt(dd)||1, k=(rmax*0.88)/dl;
+        g.position.x=c[0]+ddx*k; g.position.z=c[1]+ddz*k; an.tx=g.position.x; an.tz=g.position.z; an.pause=Math.min(an.pause,0.2); } }
+    if(!g.visible) continue;
     const L=an.legs;
     if(an.pause>0){ an.pause-=dt; g.position.y*=0.85; restLegs(L); continue; }
-    const c=an.is.c, rmax=an.is.r-1.6;   // KENDİ adasının güvenli iç yarıçapı
-    // self-heal: bir şekilde ada dışına çıktıysa merkeze doğru bir noktaya çek
-    if((g.position.x-c[0])**2+(g.position.z-c[1])**2 > rmax*rmax){
-      const aa=Math.random()*6.283, rr=Math.random()*an.is.r*0.4;
-      g.position.x=c[0]+Math.cos(aa)*rr; g.position.z=c[1]+Math.sin(aa)*rr; pickAnimalTarget(an); restLegs(L); continue;
-    }
     const dx=an.tx-g.position.x, dz=an.tz-g.position.z, d=Math.hypot(dx,dz);
     if(d<0.3){ an.pause=1.5+Math.random()*3.5; pickAnimalTarget(an); restLegs(L); continue; }
     const nx=g.position.x+dx/d*an.spd*dt, nz=g.position.z+dz/d*an.spd*dt;
@@ -1307,15 +1307,17 @@ function pickNpcTarget(n){ const a=Math.random()*6.283, r=0.8+Math.random()*n.ra
 function npcRest(g,k){ g.position.y*=0.85; g.rotation.x+=-g.rotation.x*k; g.rotation.z+=-g.rotation.z*k; }
 function updateNpcs(dt){
   for(const n of npcWander){
-    const rec=n.rec, g=rec.g; if(!g.visible) continue;
+    const rec=n.rec, g=rec.g;
+    const c=n.is.c, rmax=n.is.r-1.6;   // KENDİ adasının güvenli iç yarıçapı
+    // KOŞULSUZ SINIR: her kare, ne olursa olsun ada içine sıkıştır → kaçış imkânsız
+    { const ddx=g.position.x-c[0], ddz=g.position.z-c[1], dd=ddx*ddx+ddz*ddz;
+      if(dd>rmax*rmax){ g.position.x=n.hx; g.position.z=n.hz; pickNpcTarget(n); n.pause=Math.min(n.pause,0.2); } }
+    if(!g.visible) continue;
     if(near===rec){ // oyuncu yanındayken dur ve ona dön (etkileşim için)
       g.rotation.y=Math.atan2(player.position.x-g.position.x, player.position.z-g.position.z);
       npcRest(g,0.2); rec.q.pos[0]=g.position.x; rec.q.pos[2]=g.position.z; continue;
     }
     if(n.pause>0){ n.pause-=dt; npcRest(g,0.15); continue; }
-    const c=n.is.c, rmax=n.is.r-1.4;   // KENDİ adasının güvenli iç yarıçapı
-    if((g.position.x-c[0])**2+(g.position.z-c[1])**2 > rmax*rmax){   // self-heal: dışarı çıktıysa evine çek
-      g.position.x=n.hx; g.position.z=n.hz; pickNpcTarget(n); continue; }
     const dx=n.tx-g.position.x, dz=n.tz-g.position.z, d=Math.hypot(dx,dz);
     if(d<0.25){ n.pause=1.8+Math.random()*3.8; pickNpcTarget(n); continue; }
     const nx=g.position.x+dx/d*n.spd*dt, nz=g.position.z+dz/d*n.spd*dt;
@@ -2138,6 +2140,8 @@ addEventListener('resize',resize); resize();
     animals:()=>animals.map(a=>({id:a.def.id, ready:animalReady(a.def), produce:a.def.produce, isl:a.def.islId, pos:[Math.round(a.rec.g.position.x),Math.round(a.rec.g.position.z)], visible:a.rec.g.visible})),
     tendId:(id)=>{ const a=animals.find(x=>x.def.id===id); if(a) doTend(a.rec); return a?a.def:null; },
     stepAnimals:(n)=>{ for(let i=0;i<n;i++) updateAnimals(0.05); return animals.map(a=>[Math.round(a.rec.g.position.x*10)/10,Math.round(a.rec.g.position.z*10)/10]); },
+    displaceAnimal:(i,x,z)=>{ const a=animals[i]; if(!a) return null; a.rec.g.visible=true; a.rec.g.position.x=x; a.rec.g.position.z=z; a.pause=0; return {isl:a.def.islId, at:[x,z], center:a.is.c, r:a.is.r}; },
+    animalDist:(i)=>{ const a=animals[i]; if(!a) return null; const c=a.is.c; return {isl:a.def.islId, pos:[+a.rec.g.position.x.toFixed(1),+a.rec.g.position.z.toFixed(1)], dist:+Math.hypot(a.rec.g.position.x-c[0],a.rec.g.position.z-c[1]).toFixed(2), r:a.is.r}; },
     animalLegs:()=>animals.map(a=>({id:a.def.id, rigged:!!a.legs, legRot:a.legs?['FL','FR','BL','BR'].map(k=>a.legs[k]?+a.legs[k].rotation.x.toFixed(3):null):null})),
     gatherDefs:()=>GATHER_DEFS.map(d=>({id:d.id,isl:d.islId})), animalDefs:()=>ANIMAL_DEFS.map(d=>({id:d.id,isl:d.islId,model:d.model})),
     giveInv:(k,n)=>{ invAdd(k,n); save(); refreshHUD(); checkZekat(); return S.inv; },
