@@ -117,6 +117,12 @@ Bu oyun manipülasyonla değil, **anlamla** bağ kurar. Kırmızı çizgiler:
 - [x] **Hayvan stabilite**: 13 hayvanın tümü kendi adası içinde (3000 karede periyodik zorla-kaçış
   denendi, maxOver=-3.18); "suda hayvan" temiz state'te tekrarlanamadı → sebep eski tarayıcı cache'i
   (hard-refresh + cache-bust çözer). Hayvan koduna dokunulmadı.
+- [x] **Kıble** (Mekke yönü): dünyada kıble = -Z (mescid mihrabı da -Z'de → dış dünya + cami tutarlı).
+  `QIBLA_ANGLE=π`, `faceQibla()`. **Seccade artık kıbleye serilir** (oyuncunun rastgele yönüne değil);
+  namaz kılınca **oyuncu kıbleye döner**. **Cemaat + imam mescide kıbleye (mihraba) dönük** saf hâlinde.
+  Toolbar **🧭 kıble düğmesi** → yerde 3B kıble oku (uçta Kâbe simgesi) belirir. **Yöneliş/yönelmeyiş
+  farkı**: `facingQibla()` ±23°; kıbleye dönükse "✓ yüzün kıbleye dönük", değilse "ok yönüne dön" —
+  delil: "Yüzünü Mescid-i Harâm tarafına çevir." (Bakara 144); kıbleye dönmek namazın şartı.
 
 ## 📌 3D Modeller ✅ (2026-07-02)
 Prompt listesindeki **36 model** Blender'da üretilip `models/*.glb` olarak eklendi

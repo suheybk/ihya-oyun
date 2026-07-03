@@ -223,6 +223,7 @@
   <button class="iconbtn" id="drinkBtn" title="Su iç" style="display:none">🥤</button>
   <button class="iconbtn" id="eatBtn" title="Yemek ye" style="display:none">🍽️</button>
   <button class="iconbtn" id="ezberBtn" title="Ezber Defteri (sûre & dua)" style="display:none">📖</button>
+  <button class="iconbtn" id="kibleBtn" title="Kıble (Mekke yönü)">🧭</button>
   <button class="iconbtn" id="invBtn" title="Dağarcık (envanter)">🎒</button>
   <button class="iconbtn" id="muteBtn" title="Ses aç/kapat">🔊</button>
   <button class="iconbtn" id="hayirBtn" title="Hayır Çeşmesi — nûrunu sadakaya dönüştür">🤲</button>
@@ -669,6 +670,10 @@ scene.background=new THREE.Color(0x9fd8ea);
 scene.fog=new THREE.Fog(0x9fd4dd, 32, 82);
 const camera=new THREE.PerspectiveCamera(50,1,0.1,220);
 const CAM_OFF=new THREE.Vector3(0,12,13);
+// ---- KIBLE (Mekke yönü) ---- oyun dünyasında kıble = -Z; mescid mihrabı da -Z'de → dış dünya + cami tutarlı.
+// Modellerin önü +Z olduğundan, bir nesne rotation.y=π ile kıbleye (-Z) döner.
+const QIBLA_ANGLE=Math.PI;
+function faceQibla(o){ if(o) o.rotation.y=QIBLA_ANGLE; }
 
 // lights
 const hemi=new THREE.HemisphereLight(0xddf3ff,0x6b8f6a,0.9); scene.add(hemi);
@@ -1064,11 +1069,44 @@ function placeLaidSeccade(x,z,ry,animate){
   if(animate){ it.g.scale.set(0.16,1,0.16); seccadeAnim=1; } else it.g.scale.set(1,1,1);
 }
 function removeLaidSeccade(){ if(laidSeccadeRec){ scene.remove(laidSeccadeRec.g); const i=interactables.indexOf(laidSeccadeRec); if(i>=0) interactables.splice(i,1); if(near===laidSeccadeRec) near=null; laidSeccadeRec=null; } }
+// seccade modelinin önü (mihrap kemeri) için kıble hizası ofseti (test ile ayarlanır)
+const SECCADE_QIBLA_OFF=0;
+// ---- KIBLE OKU: yerde beliren 3B yön göstergesi (Kâbe yönünü işaret eder) ----
+let qiblaArrow=null, qiblaHideTimer=null;
+function ensureQiblaArrow(){
+  if(qiblaArrow) return qiblaArrow;
+  const g=new THREE.Group();
+  const gMat=new THREE.MeshStandardMaterial({color:0x2f8f63,emissive:0x1f6b47,emissiveIntensity:0.6,roughness:0.5});
+  const shaft=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.06,1.15),gMat); shaft.position.z=-0.62; shaft.frustumCulled=false; g.add(shaft);
+  const head=new THREE.Mesh(new THREE.ConeGeometry(0.3,0.55,4),gMat); head.rotation.x=-Math.PI/2; head.position.z=-1.45; head.frustumCulled=false; g.add(head);
+  // uçta küçük Kâbe simgesi (siyah küp + altın kuşak)
+  const kabe=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.34,0.34),new THREE.MeshStandardMaterial({color:0x161616,roughness:0.7}));
+  kabe.position.set(0,0.17,-1.95); kabe.frustumCulled=false; g.add(kabe);
+  const kusak=new THREE.Mesh(new THREE.BoxGeometry(0.37,0.09,0.37),new THREE.MeshStandardMaterial({color:0xd9b24a,emissive:0x6b4f18,emissiveIntensity:0.4,metalness:0.3,roughness:0.4}));
+  kusak.position.set(0,0.26,-1.95); kusak.frustumCulled=false; g.add(kusak);
+  g.rotation.y=QIBLA_ANGLE; g.visible=false; scene.add(g); qiblaArrow=g; return g;
+}
+// oyuncu kıbleye dönük mü (±~23°)
+function facingQibla(){ if(!player) return false; const d=((player.rotation.y-QIBLA_ANGLE+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI; return Math.abs(d)<0.4; }
+function showQibla(silent){
+  const g=ensureQiblaArrow();
+  if(player) g.position.set(player.position.x,0.09,player.position.z);
+  g.rotation.y=QIBLA_ANGLE; g.visible=true;
+  if(!silent){ banner('🧭 Kıble bu yönde');
+    // yöneliş/yönelmeyiş farkı: anlık yöne göre geri bildirim
+    if(facingQibla()) toast('✓ Yüzün kıbleye dönük — namaza durabilirsin. "Yüzünü Mescid-i Harâm tarafına çevir." (Bakara 144)');
+    else toast('🧭 Kıble ok yönünde. Namazda yüzünü oraya çevir — kıbleye dönmek namazın şartıdır (Bakara 144)');
+  }
+  if(qiblaHideTimer) clearTimeout(qiblaHideTimer);
+  qiblaHideTimer=setTimeout(()=>{ if(qiblaArrow) qiblaArrow.visible=false; }, silent?2600:4200);
+}
 function laySeccade(){
   if(!player) return;
-  const x=+player.position.x.toFixed(2), z=+player.position.z.toFixed(2), ry=player.rotation.y;
+  const x=+player.position.x.toFixed(2), z=+player.position.z.toFixed(2), ry=QIBLA_ANGLE+SECCADE_QIBLA_OFF;
+  faceQibla(player);                       // oyuncu da kıbleye döner
   S.laidSeccade={x,z,ry}; S.hasSeccade=false;
   placeLaidSeccade(x,z,ry,true);
+  showQibla(true);                         // seccade kıbleye serilirken oku kısa göster
   updateSeccadeBtn(); updateWoolHint();
 }
 function pickupSeccade(){
@@ -1095,7 +1133,8 @@ function prayNamaz(){
   if(vn==='Öğle' && isFriday() && cumaActive()){ toast('🕌 Cuma günü öğle namazı sadece camide kılınır — Mescid\'e git'); return; }
   // kerahat vakti: namaz mekruh
   if(isKerahat(gameTime)){ toast('🕗 Kerahat vakti (güneş doğuş/tepe/batış) — namaz mekruh, biraz bekle'); return; }
-  laySeccade(); playAction(1.4);   // seccade serilir (açılma animasyonu), artık yerde
+  laySeccade(); playAction(1.4);   // seccade kıbleye serilir + oyuncu kıbleye döner (laySeccade içinde)
+  if(!S.qiblaLearned){ S.qiblaLearned=true; setTimeout(()=>toast('🧭 Kıbleye yöneldin — kıbleye dönmek namazın şartıdır (Bakara 144)'),700); }
   const farz = FARZ_VAKIT.includes(vn) && !S.done['ev_namaz'];
   if(farz){
     S.done['ev_namaz']=true; addNur(10);
@@ -1131,9 +1170,9 @@ function buildMosqueInterior(){
   box(11,2.2,0.4, 0,1.1,4.5, 0xcaa87a);                     // arka duvar (giriş)
   for(const sx of [-3.4,3.4]) for(const sz of [-1.5,2.2]){ const c=new THREE.Mesh(new THREE.CylinderGeometry(0.26,0.3,4.2,12),mat(0xe4d3ad)); c.position.set(cx+sx,2.1,cz+sz); c.frustumCulled=false; g.add(c); }
   for(const lx of [-2.4,2.4]){ const l=new THREE.Mesh(new THREE.SphereGeometry(0.16,10,8),new THREE.MeshStandardMaterial({color:0xffd98a,emissive:0xffb347,emissiveIntensity:1.2})); l.position.set(cx+lx,3.0,cz-2.0); l.frustumCulled=false; g.add(l); }
-  const imam=instance('merchant'); imam.g.position.set(cx,0,cz-3.4); imam.g.rotation.y=Math.PI; imam.g.scale.setScalar(1.05); g.add(imam.g);   // mihraba dönük
+  const imam=instance('merchant'); imam.g.position.set(cx,0,cz-3.4); imam.g.rotation.y=QIBLA_ANGLE; imam.g.scale.setScalar(1.05); g.add(imam.g);   // kıbleye (mihraba, -Z) dönük
   const cong=['neighbor','traveler','orphan','shepherd','neighbor','traveler']; let k=0;
-  for(let row=0; row<2; row++) for(let col=-1; col<=1; col++){ const m=instance(cong[k%cong.length]); m.g.position.set(cx+col*1.5,0,cz-1.2+row*1.7); m.g.rotation.y=Math.PI; m.g.scale.setScalar(0.98); g.add(m.g); k++; }
+  for(let row=0; row<2; row++) for(let col=-1; col<=1; col++){ const m=instance(cong[k%cong.length]); m.g.position.set(cx+col*1.5,0,cz-1.2+row*1.7); m.g.rotation.y=QIBLA_ANGLE; m.g.scale.setScalar(0.98); g.add(m.g); k++; }   // cemaat saf hâlinde kıbleye dönük
   scene.add(g);
 }
 function mosqueFade(){ const f=document.getElementById('mosqueFade'); if(!f) return;
@@ -2283,6 +2322,7 @@ document.getElementById('invBtn').onclick=openInv;
 document.getElementById('invClose').onclick=closeInv;
 document.getElementById('inv').addEventListener('click',e=>{ if(e.target.id==='inv') closeInv(); });
 document.getElementById('prayBtn').onclick=prayNamaz;
+document.getElementById('kibleBtn').onclick=()=>showQibla(false);
 document.getElementById('fastBtn').onclick=doFast;
 document.getElementById('drinkBtn').onclick=drink;
 document.getElementById('eatBtn').onclick=eat;
@@ -2432,7 +2472,7 @@ function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect
 addEventListener('resize',resize); resize();
 
 /* ============ BOOT ============ */
-console.log('%cİHYA sürüm: Faz 11 — ezan (derinden) · cila · stabilizasyon','color:#8fce58;font-weight:bold');
+console.log('%cİHYA sürüm: Faz 11 — ezan (derinden) · kıble · cila · stabilizasyon','color:#8fce58;font-weight:bold');
 (async()=>{
   let n=0;
   for(const m of MODELS){ await load(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
@@ -2519,6 +2559,10 @@ console.log('%cİHYA sürüm: Faz 11 — ezan (derinden) · cila · stabilizasyo
     hayirMeshes:()=>hayirGroups.length,
     warnState:()=>({warned:vakitWarned, urgent:document.getElementById('vakit').classList.contains('urgent'), vakit:vakitOf(gameTime)[1]}),
     ezan:()=>sndEzan(), ezanVoice:()=>({has:!!ezanVoice, lang:ezanVoice?ezanVoice.lang:null, name:ezanVoice?ezanVoice.name:null, voices:(('speechSynthesis' in window)?(speechSynthesis.getVoices()||[]).map(v=>v.lang):[])}),
+    showQibla:()=>showQibla(false), qiblaAngle:()=>QIBLA_ANGLE,
+    qiblaState:()=>({ angle:+QIBLA_ANGLE.toFixed(3), playerRy:player?+player.rotation.y.toFixed(3):null,
+      facingQibla: player?(Math.abs(((player.rotation.y-QIBLA_ANGLE+Math.PI)%(2*Math.PI))-Math.PI)<0.2):null,
+      laidRy:S.laidSeccade?+S.laidSeccade.ry.toFixed(3):null, arrowVisible:qiblaArrow?qiblaArrow.visible:false, learned:!!S.qiblaLearned }),
     learn:(id)=>{ for(const q of islandQuests(id)) S.done[q.id]=true; interactables.forEach(r=>{ if(!r.exam) r.done=!!S.done[r.q.id]; }); save(); applyIslandLock(); refreshHUD(); } };
   tick();
 })();
