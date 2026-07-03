@@ -288,7 +288,7 @@
 <div class="veil" id="mosque">
   <div class="sheet">
     <div class="grip"></div>
-    <div class="exhead"><h3>🕌 Mescid-i Nebevî</h3><span class="exprog" id="mosqueVakit"></span></div>
+    <div class="exhead"><h3>🕌 Mescid</h3><span class="exprog" id="mosqueVakit"></span></div>
     <div class="sub" style="margin-bottom:8px">Mescitte edeple ol; sükûnetle otur, imamı dinle, cemaate katıl.</div>
     <div id="mosqueBody"></div>
   </div>
@@ -407,8 +407,8 @@ const MODELS = ['player','prayer','rahle','book','door','tree','plot','plot_spro
   'orphan','neighbor','traveler',
   // Mescid iç mekânı: imam + cemaat (Faz 7)
   'merchant','shepherd',
-  // Medine — Mescid-i Nebevî (Faz 5)
-  'masjid_nabawi'];
+  // Mescid binası (jenerik; Mescid-i Nebevî sonra) — 'mosque' zaten gömülü listede
+  ];
 
 /* ===== HÂNE (ev) — SABİT GÜNLÜK ÖĞRENME MÜFREDATI =====
    5 temel ders SABİTTİR (vakit değişince SİLİNMEZ): tuvalet âdâbı → abdest → namaz →
@@ -606,7 +606,7 @@ function onNewDay(){
   interactables.forEach(r=>{ if(!r.exam&&!r.gather&&!r.animal&&!r.npc&&!r.muahat&&!r.market&&!r.mosque&&!r.seccadePickup) r.done=false; });
   applyIslandLock(); refreshHUD();
   toast('🌙 Yeni gün doğdu — '+dayName());
-  if(isFriday()) setTimeout(()=>{ banner('🕌 Bugün Cuma'); toast('Öğle vakti gelince Mescid-i Nebevî\'ye git, Cuma\'yı cemaatle kıl 🕌'); },1300);
+  if(isFriday()) setTimeout(()=>{ banner('🕌 Bugün Cuma'); toast('Öğle vakti gelince Mescid\'ye git, Cuma\'yı cemaatle kıl 🕌'); },1300);
 }
 
 /* ============ THREE SETUP ============ */
@@ -745,7 +745,7 @@ const WORLD={
     {id:'ev',      name:'Hâne',            c:[0,0],    r:8.0},
     {id:'bahce',   name:'Hurma Bahçesi',   c:[16.5,0], r:7.0},
     {id:'mahalle', name:'Ensâr Mahallesi', c:[32.5,0], r:7.5},
-    {id:'cami',    name:'Mescid-i Nebevî', c:[49,0],   r:7.5},
+    {id:'cami',    name:'Mescid', c:[49,0],   r:7.5},
     {id:'sehir',   name:'Medine',          c:[65,0],   r:7.0},
   ],
   bridges:[]
@@ -922,11 +922,18 @@ function updateAnimals(dt){
     const g=an.rec.g; if(!g.visible) continue;
     const L=an.legs;
     if(an.pause>0){ an.pause-=dt; g.position.y*=0.85; restLegs(L); continue; }
+    const c=an.is.c, rmax=an.is.r-1.6;   // KENDİ adasının güvenli iç yarıçapı
+    // self-heal: bir şekilde ada dışına çıktıysa merkeze doğru bir noktaya çek
+    if((g.position.x-c[0])**2+(g.position.z-c[1])**2 > rmax*rmax){
+      const aa=Math.random()*6.283, rr=Math.random()*an.is.r*0.4;
+      g.position.x=c[0]+Math.cos(aa)*rr; g.position.z=c[1]+Math.sin(aa)*rr; pickAnimalTarget(an); restLegs(L); continue;
+    }
     const dx=an.tx-g.position.x, dz=an.tz-g.position.z, d=Math.hypot(dx,dz);
     if(d<0.3){ an.pause=1.5+Math.random()*3.5; pickAnimalTarget(an); restLegs(L); continue; }
     const nx=g.position.x+dx/d*an.spd*dt, nz=g.position.z+dz/d*an.spd*dt;
-    if(inIsland(nx,g.position.z,1.2)) g.position.x=nx;
-    if(inIsland(g.position.x,nz,1.2)) g.position.z=nz;
+    // yeni konum KENDİ adasının içinde mi (tam konum) — değilse dön, yeni hedef seç
+    if((nx-c[0])**2+(nz-c[1])**2 < rmax*rmax){ g.position.x=nx; g.position.z=nz; }
+    else { an.pause=0.3+Math.random()*0.8; pickAnimalTarget(an); restLegs(L); continue; }
     g.rotation.y=Math.atan2(dx,dz)+Math.PI;   // baş öne gelsin (model başı +Y=-Z) — geri geri gitmesin
     an.ph+=dt*8; g.position.y=Math.abs(Math.sin(an.ph))*0.04;
     // tırıs: çapraz bacak çiftleri karşı fazda salınır (FL+BR / FR+BL)
@@ -1026,8 +1033,8 @@ function prayNamaz(){
     toast('🧵 Seccaden yok — Dağarcık\'tan yünle ör'); return;
   }
   const vn=vakitOf(gameTime)[1];
-  // Cuma günü öğle: seccadede/evde kılınmaz — SADECE camide (Mescid-i Nebevî)
-  if(vn==='Öğle' && isFriday() && cumaActive()){ toast('🕌 Cuma günü öğle namazı sadece camide kılınır — Mescid-i Nebevî\'ye git'); return; }
+  // Cuma günü öğle: seccadede/evde kılınmaz — SADECE camide (Mescid)
+  if(vn==='Öğle' && isFriday() && cumaActive()){ toast('🕌 Cuma günü öğle namazı sadece camide kılınır — Mescid\'ye git'); return; }
   // kerahat vakti: namaz mekruh
   if(isKerahat(gameTime)){ toast('🕗 Kerahat vakti (güneş doğuş/tepe/batış) — namaz mekruh, biraz bekle'); return; }
   laySeccade(); playAction(1.4);   // seccade serilir (açılma animasyonu), artık yerde
@@ -1075,14 +1082,14 @@ function mosqueFade(){ const f=document.getElementById('mosqueFade'); if(!f) ret
   f.style.transition='none'; f.style.opacity='1';
   requestAnimationFrame(()=>{ f.style.transition='opacity .55s ease'; f.style.opacity='0'; }); }
 function enterMosque(){
-  if(!isUnlocked('cami')){ toast('🔒 Mescid-i Nebevî henüz açılmadı'); return; }
+  if(!isUnlocked('cami')){ toast('🔒 Mescid henüz açılmadı'); return; }
   mosqueMode=true; if(mosqueGroup) mosqueGroup.visible=true;
   jVec.x=0; jVec.y=0; near=null;
   camera.position.copy(mosCamStart); camera.lookAt(mosCamLook);   // uçuş yok: doğrudan iç mekâna (tick dolly-in yapar)
   const ab=document.getElementById('act'); if(ab) ab.style.display='none';
   const pe=document.getElementById('prompt'); if(pe) pe.style.display='none';
   document.getElementById('mosque').classList.add('show');
-  mosqueFade(); renderMosque(); sndVakit(); banner('🕌 Mescid-i Nebevî\'ye girdin');
+  mosqueFade(); renderMosque(); sndVakit(); banner('🕌 Mescid\'ye girdin');
 }
 function exitMosque(){
   mosqueMode=false; if(mosqueGroup) mosqueGroup.visible=false;
@@ -1263,11 +1270,14 @@ function updateNpcs(dt){
       npcRest(g,0.2); rec.q.pos[0]=g.position.x; rec.q.pos[2]=g.position.z; continue;
     }
     if(n.pause>0){ n.pause-=dt; npcRest(g,0.15); continue; }
+    const c=n.is.c, rmax=n.is.r-1.4;   // KENDİ adasının güvenli iç yarıçapı
+    if((g.position.x-c[0])**2+(g.position.z-c[1])**2 > rmax*rmax){   // self-heal: dışarı çıktıysa evine çek
+      g.position.x=n.hx; g.position.z=n.hz; pickNpcTarget(n); continue; }
     const dx=n.tx-g.position.x, dz=n.tz-g.position.z, d=Math.hypot(dx,dz);
     if(d<0.25){ n.pause=1.8+Math.random()*3.8; pickNpcTarget(n); continue; }
     const nx=g.position.x+dx/d*n.spd*dt, nz=g.position.z+dz/d*n.spd*dt;
-    if(inIsland(nx,g.position.z,1.1)) g.position.x=nx;
-    if(inIsland(g.position.x,nz,1.1)) g.position.z=nz;
+    if((nx-c[0])**2+(nz-c[1])**2 < rmax*rmax){ g.position.x=nx; g.position.z=nz; }
+    else { n.pause=0.5+Math.random()*1.0; pickNpcTarget(n); }
     g.rotation.y=Math.atan2(dx,dz)+Math.PI;   // baş öne (model başı -Z)
     n.ph+=dt*7; const w=Math.sin(n.ph);
     g.position.y=Math.abs(w)*0.045;                    // adım zıplaması
@@ -1571,11 +1581,11 @@ function buildWorld(){
     scene.add(br); b.deco=inst.meshes;
   }
   // Cami adasında MESCİD-İ NEBEVÎ (kerpiç + hurma direkleri; jenerik camiyle değişti)
-  const mq=instance('masjid_nabawi'); mq.g.position.set(49,0,-4.4); mq.g.rotation.y=0; mq.g.scale.setScalar(1.15); scene.add(mq.g);
+  const mq=instance('mosque'); mq.g.position.set(49,0,-4.4); mq.g.rotation.y=0; mq.g.scale.setScalar(1.6); scene.add(mq.g);   // jenerik mescid (Mescid sonra)
   const cam=islById('cami'); if(cam) cam.deco.push(...mq.meshes);
-  OBSTACLES.push({x:49,z:-4.4,r:1.9});   // mescid: etrafından dolan, etkileşimle içeri gir
+  OBSTACLES.push({x:49,z:-4.4,r:1.7});   // mescid: etrafından dolan, etkileşimle içeri gir (giriş menzili rahat)
   // mescide GİRME etkileşimi (kapı önünden)
-  const mqRec={ q:{id:'mosque_enter', mosque:true, pos:[49,0,-4.4], nm:'Mescid-i Nebevî', ic:'🕌'}, g:mq.g, meshes:mq.meshes, mosque:true, islId:'cami' };
+  const mqRec={ q:{id:'mosque_enter', mosque:true, pos:[49,0,-4.4], nm:'Mescid', ic:'🕌'}, g:mq.g, meshes:mq.meshes, mosque:true, islId:'cami' };
   interactables.push(mqRec);
   buildMosqueInterior();   // gizli iç mekân (girişte kamera oraya zoom yapar)
   // ağaç süsleri (adaların kenarlarında, z ~ ±4-5; görev/yol hattından uzak)
@@ -1755,7 +1765,7 @@ function interact(q){
   if(!S.done[q.id] && !questAvailable(q)){ const p=prereqOf(q); toast('🔒 Önce: '+(p?p.nm:'sıradaki adım')); return; }
   // Cuma günü öğle: namaz evde kılınmaz — sadece camide
   if(q.id==='ev_namaz' && !S.done[q.id] && vakitOf(gameTime)[1]==='Öğle' && isFriday() && cumaActive()){
-    toast('🕌 Cuma günü öğle namazı evde değil, camide kılınır — Mescid-i Nebevî\'ye git'); return; }
+    toast('🕌 Cuma günü öğle namazı evde değil, camide kılınır — Mescid\'ye git'); return; }
   if(q.steps && !S.done[q.id] && !S.learned[q.id]){ openGuide(q); return; }  // ilk kez → adım adım öğret
   openSheet(q);
 }
@@ -1810,7 +1820,7 @@ function doQuest(){
 const STORY={
   bahce:'🌱 Muhâcirler Medine\'nin çorak toprağını hurmalıklarla şenlendirdi — çalış, hasat et, kesb-i helâlle geçin.',
   mahalle:'🤝 Ensâr, muhâcir kardeşlerini evlerine aldı. Mahallede muâhât kardeşini bul (🤝), komşuyu ve yetimi gözet.',
-  cami:'🕌 Mescid-i Nebevî yükseldi; Suffa ehli ilimle meşgul. İlmini artır, cemaate koş.',
+  cami:'🕌 Mescid yükseldi; Suffa ehli ilimle meşgul. İlmini artır, cemaate koş.',
   sehir:'🏙️ Medine bir şehir oldu: Sûk kuruldu, adalet yayıldı. Helâlinden kazan, kazancından infak et.',
 };
 function passExam(islId){
@@ -2005,7 +2015,7 @@ function tick(){
       promptEl.textContent = near.seccadePickup
         ? '🧎 Seccadeni al'
         : near.mosque
-        ? '🕌 Mescid-i Nebevî\'ye gir'
+        ? '🕌 Mescid\'ye gir'
         : near.muahat
         ? ('🤝 '+near.q.nm)
         : near.npc
