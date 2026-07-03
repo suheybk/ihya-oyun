@@ -725,6 +725,7 @@ function updateDayNight(dt){
 }
 function onVakitChange(v){
   delete S.done['ev_namaz'];               // YENİ VAKİT → o vaktin namazı yeniden 'kılınmadı'
+  zikirDone={};                            // zikir/tesbihât yeni vakitte tekrar açılır
   rebuildEvQuests(v[1]);
   const rn=interactables.find(x=>x.q.id==='ev_namaz'); if(rn) rn.done=false;
   save();
@@ -852,7 +853,7 @@ function buildIslands(){
   for(const is of WORLD.islands){
     is.gMat=grassMat.clone(); is.cMat=cliffMat.clone(); is.deco=[];
     const top=new THREE.Mesh(new THREE.CylinderGeometry(is.r,is.r,0.5,46),is.gMat);
-    top.position.set(is.c[0],-0.2,is.c[1]); scene.add(top);
+    top.position.set(is.c[0],-0.25,is.c[1]); scene.add(top);   // çim yüzeyi tam y=0 (tüm nesneler taban üstünde)
     const cliff=new THREE.Mesh(new THREE.CylinderGeometry(is.r*0.98,is.r*0.78,2.4,46),is.cMat);
     cliff.position.set(is.c[0],-1.4,is.c[1]); scene.add(cliff);
     decorateIsland(is);
@@ -953,11 +954,11 @@ WORLD.islands.forEach((is,i)=>{
 });
 let animals=[];
 function animalReady(def){ const t=S.gather[def.id]; return !t || Date.now()>=t; }
-function pickAnimalTarget(an){ const is=an.is; const a=Math.random()*6.283, r=Math.random()*is.r*0.5; an.tx=is.c[0]+Math.cos(a)*r; an.tz=is.c[1]+Math.sin(a)*r; }
+function pickAnimalTarget(an){ const is=an.is; const a=Math.random()*6.283, r=Math.random()*is.r*0.42; an.tx=is.c[0]+Math.cos(a)*r; an.tz=is.c[1]+Math.sin(a)*r; }
 function makeAnimal(def){
   const is=WORLD.islands.find(i=>i.id===def.islId);
   const it=instance(def.model);
-  const a0=Math.random()*6.283, r0=Math.random()*is.r*0.45, x=is.c[0]+Math.cos(a0)*r0, z=is.c[1]+Math.sin(a0)*r0;
+  const a0=Math.random()*6.283, r0=Math.random()*is.r*0.4, x=is.c[0]+Math.cos(a0)*r0, z=is.c[1]+Math.sin(a0)*r0;
   it.g.position.set(x,0,z); it.g.scale.setScalar(def.scale); it.g.rotation.y=Math.random()*6.28;
   scene.add(it.g);
   const rec={ q:{id:'anim_'+def.id, animal:true, def, pos:[x,0,z], nm:def.label, ic:def.ic}, g:it.g, meshes:it.meshes, animal:true, def, islId:def.islId };
@@ -975,11 +976,12 @@ function restLegs(L){ if(L){ setLeg(L.FL,0); setLeg(L.FR,0); setLeg(L.BL,0); set
 function updateAnimals(dt){
   for(const an of animals){
     const g=an.rec.g;
-    const c=an.is.c, rmax=an.is.r-2.0;   // KENDİ adasının güvenli iç yarıçapı (geniş pay)
+    const c=an.is.c, rmax=an.is.r-2.5;   // KENDİ adasının güvenli iç yarıçapı (geniş pay)
     // KOŞULSUZ SINIR: her kare, görünür/görünmez/duraklamış fark etmeksizin ada içine sıkıştır → kaçış imkânsız
     { const ddx=g.position.x-c[0], ddz=g.position.z-c[1], dd=ddx*ddx+ddz*ddz;
-      if(dd>rmax*rmax){ const dl=Math.sqrt(dd)||1, k=(rmax*0.88)/dl;
+      if(dd>rmax*rmax){ const dl=Math.sqrt(dd)||1, k=(rmax*0.85)/dl;
         g.position.x=c[0]+ddx*k; g.position.z=c[1]+ddz*k; an.tx=g.position.x; an.tz=g.position.z; an.pause=Math.min(an.pause,0.2); } }
+    if(g.position.y<0) g.position.y=0;   // taban altına inme (grid üstünde yürü)
     if(!g.visible) continue;
     const L=an.legs;
     if(an.pause>0){ an.pause-=dt; g.position.y*=0.85; restLegs(L); continue; }
@@ -1176,6 +1178,21 @@ const IMAM_SOZ=[
   '"Kişi sevdiğiyle beraberdir." (Buhârî) — sâlihleri sev, meclislerine katıl.',
   '"Müslüman, elinden ve dilinden diğer Müslümanların emin olduğu kimsedir." (Buhârî)',
 ];
+// ZİKİR: mescitte (özellikle kerahat / namaz kılınmayan vakitlerde) — vakit başına bir kez her biri
+const ZIKIR=[
+  {id:'hamdele', ad:'Hamdele', ic:'🌿', nur:3, txt:'Elhamdü lillâhi Rabbil âlemîn — Hamd, âlemlerin Rabbi Allah\'a mahsustur. Şükrün başıdır.'},
+  {id:'salvele', ad:'Salvele', ic:'🌹', nur:3, txt:'Allâhümme salli alâ Muhammedin ve alâ âli Muhammed. "Bana bir salavât getirene Allah on rahmet eder." (Müslim)'},
+  {id:'istigfar',ad:'İstiğfâr', ic:'💧', nur:3, txt:'Estağfirullâhe\'l-azîm ve etûbü ileyh — Yüce Allah\'tan bağışlanma diler, O\'na tövbe ederim.'},
+  {id:'esma',    ad:'Esmâü\'l-Hüsnâ', ic:'✨', nur:4, txt:'Yâ Rahmân, yâ Rahîm, yâ Kuddûs, yâ Selâm, yâ Azîz, yâ Ğaffâr, yâ Rezzâk, yâ Latîf... "En güzel isimler Allah\'ındır; O\'na bunlarla dua edin." (A\'râf 180)'},
+];
+const TESBIHAT_TXT='33 Sübhânallah · 33 Elhamdülillah · 33 Allâhü Ekber, sonra "Lâ ilâhe illallâhü vahdehû lâ şerîke leh, lehü\'l-mülkü ve lehü\'l-hamd..." ve Âyetü\'l-Kürsî. "Bunları her namaz ardından söyleyenin günahları bağışlanır." (Müslim)';
+let zikirDone={};   // vakit başına sıfırlanır (onVakitChange)
+window.__zikir=function(id){
+  if(zikirDone[id]){ renderMosque(); return; }
+  const z=(id==='tesbihat')?{ad:'Namaz Tesbihâtı',nur:8,txt:TESBIHAT_TXT}:ZIKIR.find(x=>x.id===id);
+  if(!z) return; zikirDone[id]=true; addNur(z.nur); save(); refreshHUD(); sndChime();
+  banner((id==='tesbihat'?'📿 ':'')+z.ad); setTimeout(()=>toast(z.txt+' (+'+z.nur+' nûr)'),200); renderMosque();
+};
 function renderMosque(){
   const vn=vakitOf(gameTime)[1];
   const vl=document.getElementById('mosqueVakit'); if(vl) vl.textContent=(isFriday()?'🕌 Cuma':dayName())+' · '+vn;
@@ -1196,6 +1213,16 @@ function renderMosque(){
     h+='<div class="sub" style="margin-bottom:8px">Vaktin farzı tamam. Dilersen nâfile kıl, mescitte otur.</div>';
     h+='<button class="do" onclick="__mosqueAct(\'nafile\')">🤲 Nâfile Namaz (+5 nûr)</button>';
   }
+  // namaz sonrası TESBİHÂT (farz kılındıysa)
+  if(S.done['ev_namaz']){
+    h+= zikirDone['tesbihat'] ? '<div class="sub" style="opacity:.7;text-align:center;margin-top:8px">📿 Tesbihâtı çektin</div>'
+      : '<button class="do" style="background:#7a6a3a;margin-top:8px" onclick="__zikir(\'tesbihat\')">📿 Namaz Tesbihâtı (33 tesbih + dua, +8 nûr)</button>';
+  }
+  // ZİKİR meclisi — vakit çıkana kadar (kerahat / namaz kılınmayan zamanlarda da)
+  h+='<div class="ezsec" style="margin-top:10px">Zikir Meclisi</div><div class="ezgrid">';
+  for(const z of ZIKIR){ const dn=zikirDone[z.id];
+    h+='<button class="ezcard'+(dn?' done':'')+'" onclick="__zikir(\''+z.id+'\')">'+z.ic+' '+z.ad+(dn?' ✓':'')+'</button>'; }
+  h+='</div>';
   const key=S.dayNum+'_'+vn;
   h+= (S.mosqueSat===key) ? '<div class="sub" style="opacity:.7;text-align:center;margin-top:8px">🤲 Bu vakit oturup dinledin</div>'
     : '<button class="do" style="background:#5a7d5a;margin-top:8px" onclick="__mosqueAct(\'sit\')">🤲 Sessizce otur, imamı dinle (+3 nûr)</button>';
@@ -1830,6 +1857,7 @@ function rebuildEvQuests(vname){
   applyIslandLock(); refreshHUD();
 }
 /* ---- İLİM MECLİSİ: 6 sahabe bağdaş kurup çember, üzerlerinde gölgelik (Suffa) ---- */
+let meclisRoof=null, MECLIS_C=[49,3.9], MECLIS_R=3.4;
 function seatedSahabe(deco, cx, cz, face, robe, turban){
   const g=new THREE.Group();
   const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:0.92});
@@ -1857,6 +1885,7 @@ function buildIlimMeclisi(){
     add(new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.085,H,8), mat(0x8a6a3a)), IM[0]+dx, H/2, IM[2]+dz);
   const roof=new THREE.Mesh(new THREE.ConeGeometry(P*1.55,0.55,4), mat(0xe6d6a8)); roof.rotation.y=Math.PI/4;
   add(roof, IM[0], H+0.22, IM[2]);
+  meclisRoof=roof; MECLIS_C=[IM[0],IM[2]]; MECLIS_R=P*1.55*0.92;   // oyuncu altına girince saydamlaşır
   // 6 sahabe çember, merkeze (rahleye) dönük
   const robes=[0x7a8b5a,0x8a6f4a,0x6f7d8a,0x9a7b5a,0x6a8a6a,0x8a5a5a];
   const turbans=[0xe8e2d0,0xd8cbb0,0xeeeee6,0xd0c4a8,0xe4dcc8,0xdccfae];
@@ -2353,6 +2382,10 @@ function tick(){
   if(npcWander.length) updateNpcs(dt);
   updateSceneAmbient(dt);
   updateNeeds(dt);
+  // ilim meclisi gölgeliği: oyuncu altına girince saydamlaş (altı görünsün)
+  if(meclisRoof && player){ const under=Math.hypot(player.position.x-MECLIS_C[0],player.position.z-MECLIS_C[1])<MECLIS_R;
+    const m=meclisRoof.material, tgt=under?0.22:1; m.transparent=under||m.opacity<0.99;
+    m.opacity += (tgt-m.opacity)*0.15; m.depthWrite=m.opacity>0.9; if(m.opacity>0.995){m.opacity=1;m.transparent=false;} }
   renderer.render(scene,camera);
   requestAnimationFrame(tick);
 }
@@ -2361,6 +2394,7 @@ function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect
 addEventListener('resize',resize); resize();
 
 /* ============ BOOT ============ */
+console.log('%cİHYA sürüm: Faz 10 — gölgelik-şeffaf · zikir · grid/Y fix','color:#8fce58;font-weight:bold');
 (async()=>{
   let n=0;
   for(const m of MODELS){ await load(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
