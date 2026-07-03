@@ -22,6 +22,10 @@
   /* semâ saati (güneş/ay kavsi) */
   .iconbtn{pointer-events:auto;cursor:pointer;border:none;background:var(--panel);border-radius:14px;padding:8px 11px;box-shadow:0 4px 14px #0002;font-size:16px;line-height:1}
   .toolbar{position:fixed;right:12px;top:88px;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .woolhint{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:6;pointer-events:auto;cursor:default;
+    display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:800;
+    background:var(--panel);color:var(--muted);box-shadow:0 4px 14px #0002;border:1px solid #0000}
+  .woolhint.ready{color:#33240a;background:linear-gradient(135deg,#e9c478,#d9a441);cursor:pointer;animation:pop .3s}
   .skyclock{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 4px 3px;border-radius:16px;background:var(--panel);box-shadow:0 4px 14px #0002}
   #skySvg{width:124px;height:auto;display:block;border-radius:12px}
   .vakitlbl{font-weight:800;color:var(--ink);font-size:12.5px;line-height:1;padding:1px 2px 2px;border-radius:8px}
@@ -187,6 +191,8 @@
     <div class="vakitlbl" id="vakit">☀ Kuşluk</div>
   </div>
 </div>
+
+<div class="woolhint" id="woolHint" style="display:none"></div>
 
 <div class="toolbar" id="toolbar">
   <button class="iconbtn" id="prayBtn" title="Namaz kıl (seccadeni ser)" style="display:none">🧎</button>
@@ -388,7 +394,9 @@ const MODELS = ['player','prayer','rahle','book','door','tree','plot','plot_spro
   // Medine — seccade + pazar (Faz 3)
   'seccade','market_stall','basket','scale','jar','sack',
   // Medine — tekrarlanan hayır NPC'leri (Faz 4)
-  'orphan','neighbor','traveler'];
+  'orphan','neighbor','traveler',
+  // Medine — Mescid-i Nebevî (Faz 5)
+  'masjid_nabawi'];
 
 /* ===== HÂNE (ev) — SABİT GÜNLÜK ÖĞRENME MÜFREDATI =====
    5 temel ders SABİTTİR (vakit değişince SİLİNMEZ): tuvalet âdâbı → abdest → namaz →
@@ -552,8 +560,10 @@ for(const k of ['agac','kandil','cesme','ilim']) if(!S.hayir[k]) S.hayir[k]=[];
 if(!S.inv) S.inv={};        // KALICI envanter: {hurma:n, dut:n, ...}
 if(!S.gather) S.gather={};  // KALICI hasat cooldown'ları: {nodeId: nextReadyTimestamp}
 if(!S.zekat) S.zekat={};    // hangi malda nisab hatırlatması yapıldı
-if(S.hasSeccade===undefined) S.hasSeccade=false;  // yünden örülen seccade (her yerde namaz)
-if(!S.profile) S.profile={ set:false, ageGroup:null, gender:null, quran:null };  // kişisel mükellefiyet profili   // KALICI: bir dersi ilk kez adım adım öğrenince işaretlenir (günlük sıfırlamadan etkilenmez)
+if(S.hasSeccade===undefined) S.hasSeccade=false;  // yünden örülen seccade (yanında taşınan)
+if(S.laidSeccade===undefined) S.laidSeccade=null;  // yere serili seccade {x,z,ry} — alınmazsa kalır
+if(!S.profile) S.profile={ set:false, ageGroup:null, gender:null, quran:null };  // kişisel mükellefiyet profili
+if(S.introSeen===undefined) S.introSeen=false;  // Medine hikâye girişi gösterildi mi   // KALICI: bir dersi ilk kez adım adım öğrenince işaretlenir (günlük sıfırlamadan etkilenmez)
 const save=()=>{ try{ localStorage.setItem('ihya3d_v1',JSON.stringify(S)); }catch(e){} };
 const today=()=>new Date().toISOString().slice(0,10);
 const yesterday=()=>new Date(Date.now()-86400000).toISOString().slice(0,10);
@@ -704,11 +714,11 @@ function updateSkyWidget(){
 // ---- ADA DÜNYASI (yükseltili adalar + köprüler + kilit) ----
 const WORLD={
   islands:[
-    {id:'ev',      name:'Hâne',    c:[0,0],    r:8.0},
-    {id:'bahce',   name:'Bahçe',   c:[16.5,0], r:7.0},
-    {id:'mahalle', name:'Mahalle', c:[32.5,0], r:7.5},
-    {id:'cami',    name:'Cami',    c:[49,0],   r:7.5},
-    {id:'sehir',   name:'Şehir',   c:[65,0],   r:7.0},
+    {id:'ev',      name:'Hâne',            c:[0,0],    r:8.0},
+    {id:'bahce',   name:'Hurma Bahçesi',   c:[16.5,0], r:7.0},
+    {id:'mahalle', name:'Ensâr Mahallesi', c:[32.5,0], r:7.5},
+    {id:'cami',    name:'Mescid-i Nebevî', c:[49,0],   r:7.5},
+    {id:'sehir',   name:'Medine',          c:[65,0],   r:7.0},
   ],
   bridges:[]
 };
@@ -792,7 +802,7 @@ function applyIslandLock(){
   }
   for(const b of WORLD.bridges){ const open=bridgeOpen(b);
     (b.deco||[]).forEach(x=>x.m.material.color.copy(open?x.orig:x.gray)); }
-  for(const r of interactables){ if(r.exam||r.gather||r.animal||r.market||r.npc) continue; const u=isUnlocked(questIslandId(r.q)); setAlive(r.meshes, u && r.done); }
+  for(const r of interactables){ if(r.exam||r.gather||r.animal||r.market||r.npc||r.seccadePickup) continue; const u=isUnlocked(questIslandId(r.q)); setAlive(r.meshes, u && r.done); }
   updateExamNodes();
   for(const rec of gatherNodes){ rec.g.visible=isUnlocked(rec.def.islId); }
   for(const an of animals){ an.rec.g.visible=isUnlocked(an.def.islId); }
@@ -927,36 +937,72 @@ function isFriday(){ return dow()===5; }
 
 /* ============ SECCADE ÖRME + HER YERDE NAMAZ ============ */
 const SECCADE_YUN=5;   // seccade örmek için gereken yün
-let laidSeccade=null, laidT=0;
+const SECCADE_FIYAT=8; // seccade satış (dirhem)
+let laidSeccadeRec=null, seccadeAnim=0;
 function craftSeccade(){
   if(S.hasSeccade){ toast('✓ Zaten bir seccaden var'); return; }
+  if(S.laidSeccade){ toast('🧎 Seccaden yerde serili — gidip al'); return; }
   if((S.inv.yun||0)<SECCADE_YUN){ toast('🧵 '+SECCADE_YUN+' yün gerek ('+(S.inv.yun||0)+' var)'); return; }
-  S.inv.yun-=SECCADE_YUN; S.hasSeccade=true; save(); refreshHUD(); renderInv(); sndFanfare();
-  banner('🧎 Seccade örüldü'); toast('Artık her yerde namaz kılabilirsin');
+  S.inv.yun-=SECCADE_YUN; if(S.inv.yun<=0) delete S.inv.yun; S.hasSeccade=true; save(); refreshHUD(); renderInv(); sndFanfare();
+  banner('🧎 Seccade örüldü'); toast('Artık her yerde namaz kılabilirsin (🧎)');
   updateSeccadeBtn();
 }
+// yerde serili seccade = toplanabilir düğüm; almazsan orada kalır
+function placeLaidSeccade(x,z,ry,animate){
+  removeLaidSeccade();
+  const it=instance('seccade'); it.g.position.set(x,0.02,z); it.g.rotation.y=ry||0; scene.add(it.g);
+  const rec={ q:{id:'seccade_pickup', seccadePickup:true, pos:[x,0,z], nm:'Seccade', ic:'🧎'}, g:it.g, meshes:it.meshes, seccadePickup:true };
+  interactables.push(rec); laidSeccadeRec=rec;
+  if(animate){ it.g.scale.set(0.16,1,0.16); seccadeAnim=1; } else it.g.scale.set(1,1,1);
+}
+function removeLaidSeccade(){ if(laidSeccadeRec){ scene.remove(laidSeccadeRec.g); const i=interactables.indexOf(laidSeccadeRec); if(i>=0) interactables.splice(i,1); if(near===laidSeccadeRec) near=null; laidSeccadeRec=null; } }
 function laySeccade(){
-  if(!player) return; if(laidSeccade){ scene.remove(laidSeccade); laidSeccade=null; }
-  const it=instance('seccade'); it.g.position.set(player.position.x, 0.02, player.position.z);
-  it.g.rotation.y=player.rotation.y; it.g.scale.setScalar(1.0); scene.add(it.g); laidSeccade=it.g; laidT=5;
+  if(!player) return;
+  const x=+player.position.x.toFixed(2), z=+player.position.z.toFixed(2), ry=player.rotation.y;
+  S.laidSeccade={x,z,ry}; S.hasSeccade=false;
+  placeLaidSeccade(x,z,ry,true);
+  updateSeccadeBtn(); updateWoolHint();
+}
+function pickupSeccade(){
+  if(!S.laidSeccade){ return; }
+  S.hasSeccade=true; S.laidSeccade=null; removeLaidSeccade();
+  save(); updateSeccadeBtn(); updateWoolHint(); refreshHUD(); sndChime();
+  toast('🧎 Seccadeni aldın — yanında taşıyorsun');
+}
+function sellSeccade(){
+  if(!S.hasSeccade){ toast(S.laidSeccade?'🧎 Seccaden yerde — önce al':'Seccaden yok'); return; }
+  S.hasSeccade=false; S.dirhem=(S.dirhem||0)+SECCADE_FIYAT;
+  save(); refreshHUD(); updateSeccadeBtn(); updateWoolHint(); renderMarket(); sndChime();
+  toast('💰 +'+SECCADE_FIYAT+' dirhem (seccade satıldı)');
 }
 function prayNamaz(){
-  if(!S.hasSeccade){ toast('🧵 Önce Dağarcık\'tan yünle seccade ör'); return; }
+  if(!S.hasSeccade){
+    if(S.laidSeccade){ toast('🧎 Seccaden yerde serili — yanına gidip al'); return; }
+    toast('🧵 Seccaden yok — Dağarcık\'tan yünle ör'); return;
+  }
   const vn=vakitOf(gameTime)[1];
   if(!FARZ_VAKIT.includes(vn)){ toast('🧎 Şu an farz namaz vakti değil ('+vn+')'); return; }
   if(S.done['ev_namaz']){ toast('✓ Bu vaktin namazını kıldın'); return; }
-  laySeccade(); playAction(1.4);
+  laySeccade(); playAction(1.4);   // seccade serilir (açılma animasyonu), artık yerde
   S.done['ev_namaz']=true; addNur(10); sndChime();
   const rec=interactables.find(r=>r.q.id==='ev_namaz'); if(rec) rec.done=true;
   const ev=document.getElementById('vakit'); if(ev) ev.classList.remove('urgent');
-  // Cuma: erkek+yetişkin, Cuma günü öğle → bonus (günde bir)
   let cumaMsg='';
   if(vn==='Öğle' && isFriday() && cumaActive()){ const t=today(); if(S.cumaDone!==t){ S.cumaDone=t; addNur(20); cumaMsg=' 🕌 Cuma namazı kabul olsun (cemaatle daha faziletli, +20 nûr)'; } }
   save(); refreshHUD(); applyIslandLock();
   if(islandDone('ev')) checkStreak();
-  setTimeout(()=>toast(cumaMsg?cumaMsg:'🧎 Namaz kılındı (+10 nûr)'),200);
+  setTimeout(()=>toast(cumaMsg?cumaMsg:'🧎 Namaz kılındı (+10 nûr) — seccadeni almayı unutma!'),200);
 }
 function updateSeccadeBtn(){ const b=document.getElementById('prayBtn'); if(b) b.style.display=S.hasSeccade?'block':'none'; }
+// yün → seccade küçük ipucu (köşede)
+function updateWoolHint(){
+  const el=document.getElementById('woolHint'); if(!el) return;
+  const yun=S.inv.yun||0;
+  if(!S.hasSeccade && !S.laidSeccade && yun>0){
+    el.style.display='flex'; const ready=yun>=SECCADE_YUN; el.classList.toggle('ready',ready);
+    el.textContent='🧶 '+Math.min(yun,SECCADE_YUN)+'/'+SECCADE_YUN+(ready?' · Seccade ör':' · Seccade');
+  } else el.style.display='none';
+}
 
 /* ============ ÇALIŞMA ANİMASYONU (toplama/sağma/kırpma) ============ */
 let actionT=0;
@@ -1026,7 +1072,10 @@ function renderMarket(){
   document.getElementById('mktDirhem').textContent=S.dirhem||0;
   const w=document.getElementById('mktList'); w.innerHTML='';
   const keys=Object.keys(PRICES).filter(k=>(S.inv[k]||0)>0);
-  if(!keys.length){ w.innerHTML='<div class="invempty">Satacak malın yok. Adalarda topla/güt, sonra buraya getir 🌴🐑</div>'; return; }
+  if(!keys.length && !S.hasSeccade){ w.innerHTML='<div class="invempty">Satacak malın yok. Adalarda topla/güt, sonra buraya getir 🌴🐑</div>'; return; }
+  if(S.hasSeccade){ const card=document.createElement('div'); card.className='hcard';
+    card.innerHTML='<div class="hic">🧎</div><div class="hbody"><div class="hnm">Seccade <span class="hcnt">×1</span></div><div class="href">Elindeki seccadeyi sat</div></div><button class="hbuy" style="padding:7px 11px">Sat ('+SECCADE_FIYAT+'💰)</button>';
+    card.querySelector('.hbuy').onclick=()=>sellSeccade(); w.appendChild(card); }
   for(const k of keys){ const g=GOODS[k], have=S.inv[k], price=PRICES[k];
     const card=document.createElement('div'); card.className='hcard';
     card.innerHTML='<div class="hic">'+g.ic+'</div><div class="hbody"><div class="hnm">'+g.nm+' <span class="hcnt">×'+have+'</span></div><div class="href">Birim fiyat: '+price+' 💰</div></div>';
@@ -1044,7 +1093,7 @@ function takeFood(n){ let need=n; for(const k of FOOD){ while(need>0 && (S.inv[k
 const NPC_DEFS=[
   {id:'yetim1',   model:'orphan',   islId:'mahalle', pos:[30,0,-4.6], need:2, nur:15, cd:26000, scale:1.05,
    nm:'Yetime yemek götür', ic:'🧒', ref:'"Ben ve yetimi gözeten, cennette şöyle yan yanayız." (Buhârî)'},
-  {id:'komsu1',   model:'neighbor', islId:'mahalle', pos:[35,0,4.6],  need:2, nur:12, cd:22000, scale:1.0,
+  {id:'komsu1',   model:'neighbor', islId:'mahalle', pos:[35,0,4.6],  need:2, needItem:'dut', nur:12, cd:22000, scale:1.0,
    nm:'Komşuya ikram et',   ic:'🤝', ref:'Cebrâil komşu hakkını mirasçı kılacak sandıracak kadar tavsiye etti. (Buhârî)'},
   {id:'misafir1', model:'traveler', islId:'sehir',   pos:[63,0,-4.6], need:2, nur:14, cd:28000, scale:1.0,
    nm:'Misafiri ağırla',    ic:'🧳', ref:'"Allah\'a ve âhiret gününe iman eden misafirine ikram etsin." (Buhârî, Edeb 85)'},
@@ -1058,15 +1107,18 @@ function makeNpc(def){
 }
 function buildNpcs(){ npcNodes=[]; for(const d of NPC_DEFS) makeNpc(d); }
 function doGiveHayir(rec){
-  const def=rec.def;
+  const def=rec.def, item=def.needItem;
   if(!isUnlocked(def.islId)){ toast('🔒 Burası henüz açılmadı'); return; }
   if(!npcReady(def)){ const s=Math.max(1,Math.ceil((S.gather['npc_'+def.id]-Date.now())/1000)); toast('🙏 Az önce verdin — '+s+' sn sonra tekrar'); return; }
-  if(foodCount()<def.need){ toast('🔒 Önce yiyecek topla ('+def.need+' gerek; hurma/dut/süt)'); return; }
+  const have = item ? (S.inv[item]||0) : foodCount();
+  if(have<def.need){ toast('🔒 Önce '+(item?GOODS[item].nm:'yiyecek')+' topla ('+def.need+' gerek'+(item?'':'; hurma/dut/süt')+')'); return; }
   facePlayer(rec.g.position); playAction();
-  takeFood(def.need); addNur(def.nur);
+  if(item){ S.inv[item]-=def.need; if(S.inv[item]<=0) delete S.inv[item]; } else takeFood(def.need);
+  addNur(def.nur);
   S.gather['npc_'+def.id]=Date.now()+def.cd;
   save(); refreshHUD(); sndChime();
-  banner(def.ic+' Hayrın kabul olsun'); toast('+'+def.nur+' nûr — '+def.nm);
+  banner(def.ic+' Hayrın kabul olsun');
+  toast('+'+def.nur+' nûr — '+def.nm+' (−'+def.need+' '+(item?GOODS[item].ic+' '+GOODS[item].nm:'yiyecek')+')');
   setTimeout(()=>toast(def.ref),1500);
 }
 function startProfile(){
@@ -1318,9 +1370,8 @@ function buildWorld(){
     br.scale.set(Math.max(1.15,(len+1.7)/2.1), 1.15, 1.2);
     scene.add(br); b.deco=inst.meshes;
   }
-  // mahalle adasında cami
-  // cami adasında cami (kuzey arka planı)
-  const mq=instance('mosque'); mq.g.position.set(49,0,-3.8); mq.g.scale.setScalar(1.9); scene.add(mq.g);
+  // Cami adasında MESCİD-İ NEBEVÎ (kerpiç + hurma direkleri; jenerik camiyle değişti)
+  const mq=instance('masjid_nabawi'); mq.g.position.set(49,0,-4.4); mq.g.rotation.y=0; mq.g.scale.setScalar(1.15); scene.add(mq.g);
   const cam=islById('cami'); if(cam) cam.deco.push(...mq.meshes);
   // ağaç süsleri (adaların kenarlarında, z ~ ±4-5; görev/yol hattından uzak)
   for(const [x,z,s] of [[-5,4,1.1],[5,-4,1.0],[-6,-3,1.1],
@@ -1604,9 +1655,11 @@ document.getElementById('invBtn').onclick=openInv;
 document.getElementById('invClose').onclick=closeInv;
 document.getElementById('inv').addEventListener('click',e=>{ if(e.target.id==='inv') closeInv(); });
 document.getElementById('prayBtn').onclick=prayNamaz;
+document.getElementById('woolHint').onclick=()=>{ if((S.inv.yun||0)>=SECCADE_YUN && !S.hasSeccade && !S.laidSeccade) craftSeccade(); };
 document.getElementById('mktClose').onclick=closeMarket;
 document.getElementById('market').addEventListener('click',e=>{ if(e.target.id==='market') closeMarket(); });
 actBtn.onclick=()=>{ if(!near) return;
+  if(near.seccadePickup){ pickupSeccade(); return; }
   if(near.npc){ doGiveHayir(near); return; }
   if(near.market){ openMarket(); return; }
   if(near.animal){ doTend(near); return; }
@@ -1622,6 +1675,7 @@ function refreshHUD(){
   document.getElementById('cntPill').textContent=done+'/'+total+' ada';
   const sp=document.getElementById('streakPill');
   if(sp){ if(S.streak>0){ sp.style.display='flex'; sp.innerHTML='🔥 <b>'+S.streak+'</b>'; } else sp.style.display='none'; }
+  if(typeof updateWoolHint==='function') updateWoolHint();
 }
 
 /* ============ LOOP ============ */
@@ -1662,8 +1716,8 @@ function tick(){
       if(PP.upper) PP.upper.rotation.x=0.38; }
     else if(PP.upper){ PP.upper.rotation.x += (0-PP.upper.rotation.x)*0.2; }
   }
-  // serili seccade süresi bitince kaldır
-  if(laidSeccade){ laidT-=dt; if(laidT<=0){ scene.remove(laidSeccade); laidSeccade=null; } }
+  // seccade serilme (açılma) animasyonu
+  if(seccadeAnim>0 && laidSeccadeRec){ seccadeAnim-=dt*2.6; const t=Math.max(0,Math.min(1,1-seccadeAnim)); const e=t*t*(3-2*t); const s=0.16+0.84*e; laidSeccadeRec.g.scale.set(s,1,s); if(seccadeAnim<=0){ laidSeccadeRec.g.scale.set(1,1,1); seccadeAnim=0; } }
   // camera follow
   if(player){
     tmp.copy(player.position).add(CAM_OFF);
@@ -1677,7 +1731,8 @@ function tick(){
       if(dd<bd){ bd=dd; best=r; } }
     if(best!==near){ near=best;
       if(near){ actBtn.style.display='block';
-        if(near.npc){ actBtn.textContent = npcReady(near.def) ? (near.q.ic+' Ver') : '🙏 Verdin'; }
+        if(near.seccadePickup){ actBtn.textContent='🧎 Seccadeni al'; }
+        else if(near.npc){ actBtn.textContent = npcReady(near.def) ? (near.q.ic+' Ver') : '🙏 Verdin'; }
         else if(near.market){ actBtn.textContent='🛒 Pazar'; }
         else if(near.animal){ actBtn.textContent = animalReady(near.def) ? (near.q.ic+' '+near.def.label) : '🐑 Dinleniyor'; }
         else if(near.gather){ actBtn.textContent = nodeReady(near.def) ? (near.q.ic+' Topla') : '🌱 Olgunlaşıyor'; }
@@ -1689,7 +1744,9 @@ function tick(){
     if(near){ // prompt position
       tmp.copy(near.g.position); tmp.y+=(near.gather?2.6:1.3); tmp.project(camera);
       promptEl.style.display='block';
-      promptEl.textContent = near.npc
+      promptEl.textContent = near.seccadePickup
+        ? '🧎 Seccadeni al'
+        : near.npc
         ? (near.q.ic+' '+near.q.nm+(npcReady(near.def)?'':' — verdin'))
         : near.market
         ? '🛒 Medine Pazarı'
@@ -1706,7 +1763,7 @@ function tick(){
   }
   // sıradaki yapılabilir görev parıldasın (yol gösterir)
   const glow=0.28+0.22*Math.sin(clock.elapsedTime*3);
-  for(const r of interactables){ if(r.gather||r.animal||r.market||r.npc) continue; const on=!r.done && questAvailable(r.q);
+  for(const r of interactables){ if(r.gather||r.animal||r.market||r.npc||r.seccadePickup) continue; const on=!r.done && questAvailable(r.q);
     for(const x of r.meshes){ if(x.m.material.emissive){ x.m.material.emissive.setHex(on?0xffcf55:0x000000); x.m.material.emissiveIntensity=on?glow:0; } } }
   if(particles.length) updateParticles(dt);
   if(examNodes.length) animateExamNodes(dt, clock.elapsedTime);
@@ -1729,9 +1786,13 @@ addEventListener('resize',resize); resize();
   // istikamet: son tamamlanan gün ne bugün ne dün ise zincir kırılmış → sıfırla
   if(S.streakDay && S.streakDay!==today() && S.streakDay!==yesterday()){ S.streak=0; save(); }
   buildWorld(); applyHayir(); refreshHUD(); applyIslandLock();
-  updateSeccadeBtn(); checkZekat();
+  updateSeccadeBtn(); checkZekat(); updateWoolHint();
+  if(S.laidSeccade) placeLaidSeccade(S.laidSeccade.x, S.laidSeccade.z, S.laidSeccade.ry, false);  // önceki serili seccade yerinde kalsın
   document.getElementById('load').style.display='none';
-  if(newDay) setTimeout(()=>toast('🌅 Yeni gün — görevler yenilendi'),600);
+  if(!S.introSeen){ S.introSeen=true; save();
+    setTimeout(()=>banner('☾ Yesrib\'e Hicret'),700);
+    setTimeout(()=>toast('Bu çorak beldeyi; ibadet, kesb-i helâl ve hayırla Medine\'ye çevir 🌱'),2600);
+  } else if(newDay) setTimeout(()=>toast('🌅 Yeni gün — görevler yenilendi'),600);
   // oyun açıkken gece yarısını geçerse de sıfırla
   setInterval(()=>{ if(rollDay()){ interactables.forEach(r=>{ if(!r.exam&&!r.gather&&!r.animal) r.done=false; }); applyIslandLock(); refreshHUD(); toast('🌅 Yeni gün — görevler yenilendi'); } }, 60000);
   setInterval(updateGatherRegrow, 3000);   // hasat ağaçları yeniden verir
@@ -1763,6 +1824,9 @@ addEventListener('resize',resize); resize();
     gatherDefs:()=>GATHER_DEFS.map(d=>({id:d.id,isl:d.islId})), animalDefs:()=>ANIMAL_DEFS.map(d=>({id:d.id,isl:d.islId,model:d.model})),
     giveInv:(k,n)=>{ invAdd(k,n); save(); refreshHUD(); checkZekat(); return S.inv; },
     craftSeccade:()=>craftSeccade(), pray:()=>prayNamaz(), hasSeccade:()=>S.hasSeccade,
+    laidSeccade:()=>S.laidSeccade, pickupSeccade:()=>pickupSeccade(), sellSeccade:()=>sellSeccade(),
+    seccadeNode:()=>laidSeccadeRec?{mesh:laidSeccadeRec.mesh?laidSeccadeRec.mesh:laidSeccadeRec.meshes.length, inList:interactables.includes(laidSeccadeRec)}:null,
+    woolHint:()=>{ const e=document.getElementById('woolHint'); return {disp:e.style.display, txt:e.textContent, ready:e.classList.contains('ready')}; },
     giveZekat:(k)=>giveZekat(k), zekat:()=>Object.assign({},S.zekat), day:()=>dayName(), friday:()=>isFriday(),
     openProfile:()=>openProfile(),
     openMarket:()=>{ marketRec&&(marketRec.g.visible=true); document.getElementById('market').classList.add('show'); renderMarket(); },
