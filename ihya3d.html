@@ -252,8 +252,8 @@
 <div class="veil" id="hayir">
   <div class="sheet">
     <div class="grip"></div>
-    <div class="exhead"><h3>🤲 Hayır Çeşmesi</h3><span class="exprog">Nûr: <b id="hayirNur">0</b></span></div>
-    <div class="sub" style="margin-bottom:10px">Nûrunu sadaka-i câriyeye dönüştür; dünya güzelleşir, ecri devam eder.</div>
+    <div class="exhead"><h3>🤲 Hayır Çeşmesi</h3><span class="exprog">💰 <b id="hayirNur">0</b> dirhem</span></div>
+    <div class="sub" style="margin-bottom:10px">Kesb-i helâl dirhemini sadaka-i câriyeye dönüştür; dünya güzelleşir, ecri (nûr) devam eder.</div>
     <div id="hayirList"></div>
     <button class="cl" id="hayirClose">Kapat</button>
   </div>
@@ -386,7 +386,9 @@ const MODELS = ['player','prayer','rahle','book','door','tree','plot','plot_spro
   // Medine — çobanlık (Faz 2)
   'sheep','goat','camel',
   // Medine — seccade + pazar (Faz 3)
-  'seccade','market_stall','basket','scale','jar','sack'];
+  'seccade','market_stall','basket','scale','jar','sack',
+  // Medine — tekrarlanan hayır NPC'leri (Faz 4)
+  'orphan','neighbor','traveler'];
 
 /* ===== HÂNE (ev) — SABİT GÜNLÜK ÖĞRENME MÜFREDATI =====
    5 temel ders SABİTTİR (vakit değişince SİLİNMEZ): tuvalet âdâbı → abdest → namaz →
@@ -790,10 +792,11 @@ function applyIslandLock(){
   }
   for(const b of WORLD.bridges){ const open=bridgeOpen(b);
     (b.deco||[]).forEach(x=>x.m.material.color.copy(open?x.orig:x.gray)); }
-  for(const r of interactables){ if(r.exam||r.gather||r.animal||r.market) continue; const u=isUnlocked(questIslandId(r.q)); setAlive(r.meshes, u && r.done); }
+  for(const r of interactables){ if(r.exam||r.gather||r.animal||r.market||r.npc) continue; const u=isUnlocked(questIslandId(r.q)); setAlive(r.meshes, u && r.done); }
   updateExamNodes();
   for(const rec of gatherNodes){ rec.g.visible=isUnlocked(rec.def.islId); }
   for(const an of animals){ an.rec.g.visible=isUnlocked(an.def.islId); }
+  for(const rec of npcNodes){ rec.g.visible=isUnlocked(rec.def.islId); }
   if(marketRec){ const u=isUnlocked(MARKET_POS.islId); marketRec.g.visible=u; marketDecor.forEach(d=>d.visible=u); }
 }
 
@@ -1033,6 +1036,39 @@ function renderMarket(){
     bs.appendChild(b1); bs.appendChild(b2); card.appendChild(bs); w.appendChild(card);
   }
 }
+
+/* ============ TEKRARLANAN HAYIR — NPC'ler (Faz 4): aynî sadaka ============ */
+const FOOD=['hurma','dut','ekmek','sut'];   // yiyecek kategorisi
+function foodCount(){ return FOOD.reduce((s,k)=>s+(S.inv[k]||0),0); }
+function takeFood(n){ let need=n; for(const k of FOOD){ while(need>0 && (S.inv[k]||0)>0){ S.inv[k]--; if(S.inv[k]<=0) delete S.inv[k]; need--; } } return n-need; }
+const NPC_DEFS=[
+  {id:'yetim1',   model:'orphan',   islId:'mahalle', pos:[30,0,-4.6], need:2, nur:15, cd:26000, scale:1.05,
+   nm:'Yetime yemek götür', ic:'🧒', ref:'"Ben ve yetimi gözeten, cennette şöyle yan yanayız." (Buhârî)'},
+  {id:'komsu1',   model:'neighbor', islId:'mahalle', pos:[35,0,4.6],  need:2, nur:12, cd:22000, scale:1.0,
+   nm:'Komşuya ikram et',   ic:'🤝', ref:'Cebrâil komşu hakkını mirasçı kılacak sandıracak kadar tavsiye etti. (Buhârî)'},
+  {id:'misafir1', model:'traveler', islId:'sehir',   pos:[63,0,-4.6], need:2, nur:14, cd:28000, scale:1.0,
+   nm:'Misafiri ağırla',    ic:'🧳', ref:'"Allah\'a ve âhiret gününe iman eden misafirine ikram etsin." (Buhârî, Edeb 85)'},
+];
+let npcNodes=[];
+function npcReady(def){ const t=S.gather['npc_'+def.id]; return !t || Date.now()>=t; }
+function makeNpc(def){
+  const it=instance(def.model); it.g.position.set(def.pos[0],0,def.pos[2]); it.g.rotation.y=Math.PI; it.g.scale.setScalar(def.scale||1); scene.add(it.g);
+  const rec={ q:{id:'npc_'+def.id, npc:true, def, pos:def.pos, nm:def.nm, ic:def.ic}, g:it.g, meshes:it.meshes, npc:true, def, islId:def.islId };
+  interactables.push(rec); npcNodes.push(rec); return rec;
+}
+function buildNpcs(){ npcNodes=[]; for(const d of NPC_DEFS) makeNpc(d); }
+function doGiveHayir(rec){
+  const def=rec.def;
+  if(!isUnlocked(def.islId)){ toast('🔒 Burası henüz açılmadı'); return; }
+  if(!npcReady(def)){ const s=Math.max(1,Math.ceil((S.gather['npc_'+def.id]-Date.now())/1000)); toast('🙏 Az önce verdin — '+s+' sn sonra tekrar'); return; }
+  if(foodCount()<def.need){ toast('🔒 Önce yiyecek topla ('+def.need+' gerek; hurma/dut/süt)'); return; }
+  facePlayer(rec.g.position); playAction();
+  takeFood(def.need); addNur(def.nur);
+  S.gather['npc_'+def.id]=Date.now()+def.cd;
+  save(); refreshHUD(); sndChime();
+  banner(def.ic+' Hayrın kabul olsun'); toast('+'+def.nur+' nûr — '+def.nm);
+  setTimeout(()=>toast(def.ref),1500);
+}
 function startProfile(){
   S.profile={ set:true, ageGroup:profSel.ageGroup, gender:profSel.gender, quran:profSel.quran };
   applyProfile();
@@ -1098,11 +1134,12 @@ function animateAtmosphere(dt,t){
 }
 
 /* ============ HAYIR ÇEŞMESİ — nûr ile sadaka-i câriye (dünya güzelleşir) ============ */
+// dirhem (kesb-i helâl) ile yaptırılır, karşılığında nûr kazandırır: dirhem → sadaka-i câriye → nûr
 const HAYIR=[
-  {id:'agac', ic:'🌳', nm:'Ağaç diktir',   cost:40,  max:10, ref:'Bir müslüman ağaç diker de ondan yenirse, bu onun için sadaka olur. (Buhârî, Hars 1)'},
-  {id:'kandil',ic:'🏮', nm:'Kandil yaktır', cost:60,  max:8,  ref:'Mallarını Allah yolunda harcayanların durumu, yedi başak veren bir tohum gibidir. (Bakara 2/261)'},
-  {id:'cesme', ic:'⛲', nm:'Çeşme yaptır',  cost:100, max:4,  ref:'Sadakanın en faziletlisi, (susayana) su ikram etmektir. (İbn Mâce, Edeb 8)'},
-  {id:'ilim',  ic:'📖', nm:'Mushaf vakfet', cost:140, max:4,  ref:'İnsan ölünce ameli kesilir; sadaka-i câriye, faydalı ilim ve hayırlı evlât müstesnâ. (Müslim, Vasiyyet 14)'},
+  {id:'agac', ic:'🌳', nm:'Ağaç diktir',   cost:25, reward:20, max:10, ref:'Bir müslüman ağaç diker de ondan yenirse, bu onun için sadaka olur. (Buhârî, Hars 1)'},
+  {id:'kandil',ic:'🏮', nm:'Kandil yaktır', cost:40, reward:30, max:8,  ref:'Mallarını Allah yolunda harcayanların durumu, yedi başak veren bir tohum gibidir. (Bakara 2/261)'},
+  {id:'cesme', ic:'⛲', nm:'Çeşme yaptır',  cost:70, reward:55, max:4,  ref:'Sadakanın en faziletlisi, (susayana) su ikram etmektir. (İbn Mâce, Edeb 8)'},
+  {id:'ilim',  ic:'📖', nm:'Mushaf vakfet', cost:100,reward:80, max:4,  ref:'İnsan ölünce ameli kesilir; sadaka-i câriye, faydalı ilim ve hayırlı evlât müstesnâ. (Müslim, Vasiyyet 14)'},
 ];
 let hayirGroups=[], lanternCores=[];
 function randomHayirSpot(){
@@ -1132,23 +1169,23 @@ function applyHayir(){
 function donateHayir(id){
   const def=HAYIR.find(h=>h.id===id); const arr=S.hayir[id];
   if(arr.length>=def.max){ toast('✓ Bu hayırda azami sayıya ulaştın'); return; }
-  if(S.nur<def.cost){ toast('🔒 Yetersiz nûr — '+def.cost+' gerekli'); return; }
-  S.nur-=def.cost; const p=randomHayirSpot(); arr.push(p); addHayirMesh(id,p);
+  if((S.dirhem||0)<def.cost){ toast('🔒 Yetersiz dirhem — '+def.cost+' gerekli (pazarda mal sat)'); return; }
+  S.dirhem-=def.cost; addNur(def.reward); const p=randomHayirSpot(); arr.push(p); addHayirMesh(id,p);
   save(); refreshHUD(); renderHayir();
-  sndChime(); banner(def.ic+' Sadaka-i câriye'); toast('🤲 '+def.nm+' — kabul olsun');
+  sndChime(); banner(def.ic+' Sadaka-i câriye'); toast('🤲 '+def.nm+' — kabul olsun (+'+def.reward+' nûr)');
 }
 function openHayir(){ audio(); renderHayir(); document.getElementById('hayir').classList.add('show'); }
 function closeHayir(){ document.getElementById('hayir').classList.remove('show'); }
 function renderHayir(){
-  document.getElementById('hayirNur').textContent=S.nur;
+  document.getElementById('hayirNur').textContent=S.dirhem||0;
   const w=document.getElementById('hayirList'); w.innerHTML='';
   for(const h of HAYIR){
-    const have=(S.hayir[h.id]||[]).length, maxed=have>=h.max, poor=S.nur<h.cost;
+    const have=(S.hayir[h.id]||[]).length, maxed=have>=h.max, poor=(S.dirhem||0)<h.cost;
     const card=document.createElement('div'); card.className='hcard';
     card.innerHTML='<div class="hic">'+h.ic+'</div>'+
       '<div class="hbody"><div class="hnm">'+h.nm+' <span class="hcnt">'+have+'/'+h.max+'</span></div>'+
       '<div class="href">'+h.ref+'</div></div>'+
-      '<button class="hbuy'+(maxed||poor?' off':'')+'">'+(maxed?'Tamam ✓':'✦ '+h.cost)+'</button>';
+      '<button class="hbuy'+(maxed||poor?' off':'')+'">'+(maxed?'Tamam ✓':'💰 '+h.cost+' → ✦'+h.reward)+'</button>';
     const btn=card.querySelector('.hbuy');
     if(!maxed) btn.onclick=()=>donateHayir(h.id);
     w.appendChild(card);
@@ -1302,6 +1339,7 @@ function buildWorld(){
   buildGatherNodes();   // Medine: Hurma Bahçesi'nde toplanabilir ağaçlar
   buildAnimals();       // Medine: dolaşan hayvanlar (çobanlık)
   buildMarket();        // Medine: Şehir'de Sûk (pazar)
+  buildNpcs();          // Medine: tekrarlanan hayır NPC'leri (yetim/komşu/misafir)
 
   // player
   const pl=instance('player');
@@ -1569,6 +1607,7 @@ document.getElementById('prayBtn').onclick=prayNamaz;
 document.getElementById('mktClose').onclick=closeMarket;
 document.getElementById('market').addEventListener('click',e=>{ if(e.target.id==='market') closeMarket(); });
 actBtn.onclick=()=>{ if(!near) return;
+  if(near.npc){ doGiveHayir(near); return; }
   if(near.market){ openMarket(); return; }
   if(near.animal){ doTend(near); return; }
   if(near.gather){ doGather(near); return; }
@@ -1638,7 +1677,8 @@ function tick(){
       if(dd<bd){ bd=dd; best=r; } }
     if(best!==near){ near=best;
       if(near){ actBtn.style.display='block';
-        if(near.market){ actBtn.textContent='🛒 Pazar'; }
+        if(near.npc){ actBtn.textContent = npcReady(near.def) ? (near.q.ic+' Ver') : '🙏 Verdin'; }
+        else if(near.market){ actBtn.textContent='🛒 Pazar'; }
         else if(near.animal){ actBtn.textContent = animalReady(near.def) ? (near.q.ic+' '+near.def.label) : '🐑 Dinleniyor'; }
         else if(near.gather){ actBtn.textContent = nodeReady(near.def) ? (near.q.ic+' Topla') : '🌱 Olgunlaşıyor'; }
         else if(near.exam){ actBtn.textContent = S.conquered[near.islId] ? 'Meydan ✓' : (examReady(near.islId) ? '📝 İmtihana Gir' : '🔒 Önce dersler'); }
@@ -1649,7 +1689,9 @@ function tick(){
     if(near){ // prompt position
       tmp.copy(near.g.position); tmp.y+=(near.gather?2.6:1.3); tmp.project(camera);
       promptEl.style.display='block';
-      promptEl.textContent = near.market
+      promptEl.textContent = near.npc
+        ? (near.q.ic+' '+near.q.nm+(npcReady(near.def)?'':' — verdin'))
+        : near.market
         ? '🛒 Medine Pazarı'
         : near.animal
         ? ((animalReady(near.def)?near.q.ic+' '+near.def.label:'🐑 dinleniyor'))
@@ -1664,7 +1706,7 @@ function tick(){
   }
   // sıradaki yapılabilir görev parıldasın (yol gösterir)
   const glow=0.28+0.22*Math.sin(clock.elapsedTime*3);
-  for(const r of interactables){ if(r.gather||r.animal||r.market) continue; const on=!r.done && questAvailable(r.q);
+  for(const r of interactables){ if(r.gather||r.animal||r.market||r.npc) continue; const on=!r.done && questAvailable(r.q);
     for(const x of r.meshes){ if(x.m.material.emissive){ x.m.material.emissive.setHex(on?0xffcf55:0x000000); x.m.material.emissiveIntensity=on?glow:0; } } }
   if(particles.length) updateParticles(dt);
   if(examNodes.length) animateExamNodes(dt, clock.elapsedTime);
@@ -1726,6 +1768,9 @@ addEventListener('resize',resize); resize();
     openMarket:()=>{ marketRec&&(marketRec.g.visible=true); document.getElementById('market').classList.add('show'); renderMarket(); },
     sell:(k,all)=>sellGood(k,all), dirhem:()=>S.dirhem||0, prices:()=>PRICES,
     marketBuilt:()=>!!marketRec,
+    npcs:()=>npcNodes.map(r=>({id:r.def.id,isl:r.def.islId,ready:npcReady(r.def),vis:r.g.visible,mesh:r.meshes.length})),
+    giveNpc:(id)=>{ const r=npcNodes.find(x=>x.def.id===id); if(r) doGiveHayir(r); return r?{food:foodCount()}:null; },
+    setDirhem:(n)=>{ S.dirhem=n; save(); refreshHUD(); }, donateHayir:(id)=>donateHayir(id),
     setProfile:(age,gen,q)=>{ profSel={ageGroup:age,gender:gen,quran:q}; startProfile(); return Object.assign({},S.profile); },
     profile:()=>Object.assign({},S.profile),
     rules:()=>({isChild:isChild(),isAdult:isAdult(),isMale:isMale(),cumaActive:cumaActive(),zekatMukellef:zekatMukellef(),hasSeccade:S.hasSeccade}),
