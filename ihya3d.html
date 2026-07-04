@@ -3,8 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#bfe3f0">
+<meta name="theme-color" content="#2f8f63">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="İhya">
 <title>İhya — 3D Dünya</title>
+<script>
+/* ===== PWA: Service Worker — kullanıcı deploy sonrası HER ZAMAN en son sürümü görür =====
+ * SW yalnız http/https'te çalışır (file:// çift-tıkta atlanır, oyun gömülü modellerle yine açılır).
+ * network-first HTML → online'da hep taze; controllerchange → yeni SW gelince bir kez otomatik yenile. */
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  if(location.protocol!=='http:' && location.protocol!=='https:') return;   // file:// → atla
+  var reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(reloaded) return; reloaded=true; location.reload();               // yeni sürüm kontrolü alınca taze yükle
+  });
+  addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      // periyodik güncelleme kontrolü (uygulama açık kalırsa da yeni sürümü yakalar)
+      setInterval(function(){ reg.update().catch(function(){}); }, 60*60*1000);
+      reg.addEventListener('updatefound', function(){
+        var nw=reg.installing; if(!nw) return;
+        nw.addEventListener('statechange', function(){
+          if(nw.state==='installed' && navigator.serviceWorker.controller && typeof toast==='function'){
+            toast('✨ Yeni sürüm hazır');
+          }
+        });
+      });
+    }).catch(function(){});
+  });
+})();
+</script>
 <style>
   :root{
     --ink:#1d3a2f; --gold:#d9a441; --green:#2f8f63; --panel:#ffffffee; --muted:#5a7a6b;
@@ -231,7 +264,7 @@
   <button class="iconbtn" id="hayirBtn" title="Hayır Çeşmesi — nûrunu sadakaya dönüştür">🤲</button>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.6 (hayvan kaçınma + tuvalet/abdest)</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.7 (PWA · her zaman güncel)</div>
 
 <div id="prompt"></div>
 <div id="joy"><div id="knob"></div></div>
@@ -2560,7 +2593,7 @@ function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect
 addEventListener('resize',resize); resize();
 
 /* ============ BOOT ============ */
-console.log('%cİHYA sürüm: Faz 11.6 — hayvan Mescid/seccade kaçınma + tuvalet/abdest tazeleme','color:#8fce58;font-weight:bold');
+console.log('%cİHYA sürüm: Faz 11.7 — PWA (service worker, her zaman güncel) + hayvan kod-doğrulama','color:#8fce58;font-weight:bold');
 (async()=>{
   let n=0;
   for(const m of MODELS){ await load(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
