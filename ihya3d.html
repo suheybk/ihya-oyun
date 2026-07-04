@@ -276,7 +276,7 @@
   <button class="iconbtn" id="hayirBtn" title="Hayır Çeşmesi — nûrunu sadakaya dönüştür">🤲</button>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.13 (v2 detaylı modeller + mescid namaz cooldown/geri-sayım)</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.14 (well v2 — yuvarlak clay tuğla + doğru renk)</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -2004,7 +2004,7 @@ const loader=new GLTFLoader();
 const tpl={};
 const loadBar=document.getElementById('loadBar');
 function b64ToBuf(u){ const b=atob(u.split(',')[1]); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i); return a.buffer; }
-const MODELV='f7';   // model sürümü (v2 detaylı modeller → cache-bust)
+const MODELV='f8';   // model sürümü (well v2 yuvarlak+linear-renk → cache-bust)
 // v2 detaylı modeller: gömülü (eski) sürümü ATLA, models/*.glb'den (yeni) fetch et.
 // (models büyüdü → embed HTML'i şişirmesin; SW cache'ler, offline PWA çalışır. file:// bu modelleri yükleyemez.)
 const FETCH_ONLY = new Set(['camel','goat','date_palm','date_palm_bare','item_date','item_mulberry',
