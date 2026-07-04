@@ -188,3 +188,32 @@ mekanik**: modelleri `MODELS` dizisine ekle → Faz 1'den başla.
 Oyundaki âyet/hadîs/sîret bilgileri dikkatle seçiliyor; yine de yeni eklenen metinler
 yayına almadan önce güvenilir bir kaynaktan/ehlinden teyit edilmeli. Niyet: sevdirmek,
 yanıltmamak.
+
+## 🔜 Sıradaki Oturum — Suheyb'in İstek Listesi (2026-07-04, Faz 11.17 sonrası)
+> Canlı sürüm **Faz 11.17** (live2=ihya-medine). Oyuncu=boy_takke, dev deve (2.8x koyun), NPC bacak+kol
+> animasyonu, yeni sheep/traveler, Medine Adaleti mekaniği hepsi canlı. Aşağıdakiler bir sonraki oturumda:
+
+- [ ] **İkram animasyonları özel olsun** — komşuya ikram + yetime ikram (`doGiveHayir`) için jenerik
+  `playAction` yerine ÖZEL animasyon (ör. yemeği iki elle uzatma / hafif eğilip verme jesti). Yeni bir
+  `actionKind` ('give' gibi) + tick'te kol pozu ekle.
+- [ ] **Namaz kılma animasyonu yenilensin + KIBLEYE DÖNÜŞ** — `prayNamaz`'da oyuncu **kıble yönüne dönsün**
+  (`faceQibla(player)` var ama animasyonla belirginleşsin); namaz hareketi değişsin (kıyam→rükû→secde
+  benzeri gerçek namaz pozu; şu an sadece kol öne-aşağı 'work').
+- [ ] **Koyunun altındaki KARE şey** — yeni sheep.glb'de zemin plakası/gölge var → `BASE_HIDE`'a `sheep`
+  ekle ya da o kare mesh'i gizle. (Hızlı fix; mesh adını in-game incele.)
+- [ ] **Oyuncu takkesi YEŞİL olsun** — build_boy.py'de `CAP=(106,80,62)` kahve, `HAIR=(96,62,46)`ye çok
+  yakın → takke **yeşil** yap, saçtan net ayrışsın. (Model rebuild veya kodda Cap+Cap_Rim mesh recolor.)
+- [ ] **NPC normal hali "kucaklayıcı" olmasın** — neighbor modelinin açık-kollu (welcoming) duruşu nötrlensin;
+  kollar **oyuncudaki gibi** yanda dursun, yürürken sallansın, **dururken normal** (kollar aşağı). Model
+  rebuild (Sleeve pozu yana/aşağı) ya da kod-pivot ile idle'da kolları aşağı çek.
+- [ ] **Zikir kitabı yerde olmasın** — book/zikir modeli **ağaçta asılı** olsun (konum + yükseklik değişimi).
+- [ ] **Medine Pazarı 3x büyük** (her şeyiyle: market_stall + tezgâh + mal). **Tüccar NPC arkasına** konsun;
+  **tüccarın başı tentenin altında** kalacak yükseklik oranında olsun.
+- [ ] **Hurma ağacı boyu 2x** (şu an gather scale 1.7 → ~2.08 birim; **2 katına** ~4 birim). Sebep: hurma
+  toplama animasyonunda oyuncu kolları yukarı kalkıyor; ağaç kısayken "yukarıdan hurma alma" gerçekçi
+  durmuyor → ağaç uzayınca jest anlamlı olur.
+
+**NOT (yeni model reçetesi):** karakter modelleri Pant_L/R+Shoe/Sole (bacak), Sleeve_L/R+Hand (kol),
+yüz +Z, `lin()` sRGB→linear renk. Kodda `prig`/`rigNpcLegs` {parts,piv} + `swingLeg` ile otomatik anime
+olur. Eski v2 modeller (neighbor/orphan/goat/camel) hâlâ lin()siz → hafif soluk; yenilenirse aynı
+pipeline. NOT: GitHub Pages bugün flaky'di — 11.16 ve 11.17 boş-commit retrigger döngüsüyle 1-2 denemede geçti.
