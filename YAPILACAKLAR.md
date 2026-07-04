@@ -227,6 +227,23 @@ görünen fallback kutusu = yüklenememiş model). Bu yüzden dev sunucumda bile
 - **NOT (debug artefaktı, bug DEĞİL):** `d.teleport` sonrası prompt bayat kalıyordu ("Tuvalet âdâbı" pazarda);
   normal `d.move`'da anında güncelledi → gerçek oyunda (oyuncu hep yürür) sorun yok, dokunulmadı.
 
+### Faz 11.21 — YENİ BÖLÜM: Umre 🕋 (2026-07-04, Suheyb seçti)
+> Mescid "özel mekân" deseni (enterMosque) örnek alınarak Mekke/Kâbe sahnesi + menâsik akışı kuruldu.
+> Uçtan uca eval ile doğrulandı (enter→ihram→tavaf×7→sa'y×7→tıraş), konsol temiz.
+- [x] **Giriş**: Şehir (Medine)'de **mini-Kâbe kapısı** (70,0,3); `hac:true` interactable → `enterHac()`.
+  Çevre yürünebilir (69,2/71,2/70,1/68,3/70,4 "ok"), obstacle r=0.85 (etrafından dolan).
+- [x] **Mekke sahnesi** (`buildKaabaScene`, gizli -150,-120): siyah Kâbe + altın kuşak (kiswe) +
+  Hacerü'l-Esved köşesi + mataf dairesi + Safâ/Merve tepeleri + mes'â yolu + 10 beyaz ihrâmlı hacı dekor +
+  **beyaz ihrâmlı oyuncu avatarı** (boy_takke, tunik/kol/pantolon beyaza boyandı).
+- [x] **Akış** (`renderHac`/`__hacAct`/state machine): İhrâm+telbiye (Web Speech Arapça "Lebbeyk…") →
+  Tavâf 7 şavt (her şavt +2 nûr, hacı Kâbe'yi **sola alarak** döner — `hacTick` ang→angT lerp, konverjans
+  doğrulandı) → Sa'y Safâ↔Merve 7 şavt (+2 nûr) → Tıraş (+40 nûr, `S.umreCount++`, 700ms sonra çıkış).
+  Her adımda fıkıh/delil (Bakara 158, Buhârî Umre 1). Toplam ~68 nûr/umre.
+- [x] **Tick entegrasyonu**: `hacMode` gate'leri (hareket/kamera/near durur, mescid gibi); kamera Kâbe'ye
+  yukarıdan bakar; HTML `#hac` panel (`.veil/.sheet` mescitle aynı stil). Debug: `__ihya3d.enterHac/hacAct/hacState`.
+- [ ] **Hac genişletmesi (ileride)**: Arafat vakfesi + Müzdelife + Şeytan taşlama (cemerât) + kurban →
+  tam Hac. Ayrıca 'hac' QBANK topic'i + Şehir imtihanına bağlama.
+
 ## 📌 3D Modeller ✅ (2026-07-02)
 Prompt listesindeki **36 model** Blender'da üretilip `models/*.glb` olarak eklendi
 (hayvanlar, hurma/dut ağaçları, eşya/pickup, pazar, yapılar, Mescid-i Nebevî, NPC'ler).
@@ -245,8 +262,8 @@ yanıltmamak.
 - [ ] **#6 Zikir kitabı ağaçta asılı** — book modeli (selam/davet/dua node'ları book kullanıyor) yerde;
   **hangisi** "zikir kitabı" belirsiz → Suheyb'e soruldu. Netleşince o node'u ağaca asılı konuma taşı
   (küçük tree instance + book Y↑ ~1.3 + hafif tilt). İPUCU: node'lar `QUESTS`/`evQuests` listesinde pos ile.
-- [ ] **Yeni bölüm/ada fikri (Suheyb "düşünebiliriz")** — adaylar: 🕋 Hac/Umre · ⚔️ Bedir-Uhud sîret olayları ·
-  📜 Ashâb-ı Suffa'ya hizmet · 💧 ekin/sulama derinliği. Karar Suheyb'de; seçilince yeni ada + mekanik + QBANK.
+- [x] **Yeni bölüm — 🕋 Umre (Faz 11.21)** — Suheyb seçti, yapıldı+canlı (bkz. Faz 11.21). Sıradaki genişleme:
+  tam **Hac** (Arafat/Müzdelife/taşlama/kurban) + 'hac' QBANK. Diğer aday bölümler: Bedir-Uhud sîret, Suffa hizmet.
 - [ ] **Daha çok soru (sürüyor)** — 11.19'da 8 eklendi; her topic 3+ soruya çıkarılabilir (taharet/abdest/
   namaz/fidan/canli/davet/emanet/cemaat henüz 2-3).
 
