@@ -253,8 +253,7 @@ görünen fallback kutusu = yüklenememiş model). Bu yüzden dev sunucumda bile
 - [x] **Seccade tekrar örülebilir**: serili seccade unutulunca `S.laidSeccade` set kalıp `craftSeccade`'i bloke
   ediyor + wool-hint gizleniyordu → tıkanma. Fix: craftSeccade serili eskisini geride bırakıp yeniden örer;
   woolHint `!laidSeccade` şartı kaldırıldı. Test: ör→ser→unut→yeniden ör (has✓, yün 20→10).
-- [ ] **Sinematik intro + dil (TR/AR/EN)** — SIRADA (bu oturumun büyük işi): başta HUD gizli, kontrol-ipucu +
-  dil seçim ekranı; yakın çekim kahraman yerde oturur→sağa-sola bakar→kalkar (karanlık+kısık ezan)→evinde bulur. i18n altyapısı.
+- [x] **Sinematik intro + dil (TR/AR/EN)** — YAPILDI (Faz 11.23, bkz. ilgili bölüm).
 
 ### Faz 11.23 — Sinematik intro + dil seçimi (TR/AR/EN) (2026-07-04, Suheyb)
 - [x] **Başta HUD gizli**: `body.intro > *:not(#c):not(#introRoot){display:none!important}`; boot'ta `!S.introDone`→`startIntro()`.
@@ -296,7 +295,7 @@ yanıltmamak.
 > **Faz 11.18–11.19'da 8 isteğin 7'si + cila bitti** (koyun·takke·NPC kol·hurma·ikram anim·namaz anim·
 > pazar 3x·NPC etiket·+8 soru). Kalan:
 
-- [ ] **#6 Zikir kitabı ağaçta asılı** — book modeli (selam/davet/dua node'ları book kullanıyor) yerde;
+- [x] **#6 Zikir kitabı ağaçta asılı** — YAPILDI (Faz 11.20, dua node ağaca asıldı). ~~book modeli (selam/davet/dua node'ları book kullanıyor) yerde;~~
   **hangisi** "zikir kitabı" belirsiz → Suheyb'e soruldu. Netleşince o node'u ağaca asılı konuma taşı
   (küçük tree instance + book Y↑ ~1.3 + hafif tilt). İPUCU: node'lar `QUESTS`/`evQuests` listesinde pos ile.
 - [x] **Yeni bölüm — 🕋 Umre (Faz 11.21)** — Suheyb seçti, yapıldı+canlı (bkz. Faz 11.21). Sıradaki genişleme:
