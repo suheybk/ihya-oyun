@@ -217,6 +217,58 @@
 <body>
 <canvas id="c"></canvas>
 
+<!-- ============ INTRO: dil seçimi + kontrol ipucu + sinematik ============ -->
+<style>
+  body.intro > *:not(#c):not(#introRoot){ display:none !important; }   /* intro'da tüm HUD gizli */
+  #introRoot{ position:fixed; inset:0; z-index:60; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
+  .introScreen{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px;
+    background:radial-gradient(120% 90% at 50% 20%, #14342a 0%, #0a1a15 60%, #050b09 100%); color:#eaf3ec; text-align:center; padding:24px; }
+  .introTitle{ font-size:clamp(46px,13vw,88px); font-weight:900; letter-spacing:.02em; color:#8fce58;
+    text-shadow:0 2px 30px rgba(143,206,88,.35); }
+  .introSub{ font-size:15px; letter-spacing:.06em; opacity:.82; margin-top:-14px }
+  .introLangBtns{ display:flex; flex-direction:column; gap:12px; width:min(320px,82vw) }
+  .introLangBtn{ font-size:19px; font-weight:700; padding:15px 18px; border-radius:15px; border:1.5px solid #2f8f6355;
+    background:rgba(255,255,255,.06); color:#eaf3ec; cursor:pointer; transition:transform .12s, background .12s, border-color .12s }
+  .introLangBtn:hover,.introLangBtn:focus{ background:rgba(143,206,88,.16); border-color:#8fce58; transform:translateY(-2px); outline:none }
+  .introCtrl{ display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:6px; opacity:.9 }
+  .introKeys{ display:grid; grid-template-columns:repeat(3,40px); grid-template-rows:40px 40px; gap:6px; justify-content:center }
+  .introKeys span{ display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; border-radius:9px;
+    background:rgba(255,255,255,.1); border:1.5px solid rgba(255,255,255,.22) }
+  .introKeys .kw{ grid-column:2 } .introKeys .ka{ grid-column:1; grid-row:2 } .introKeys .ks{ grid-column:2; grid-row:2 } .introKeys .kd{ grid-column:3; grid-row:2 }
+  .introOr{ font-size:13px; opacity:.6 }
+  .introJoy{ width:74px; height:74px; border-radius:50%; border:2px solid rgba(255,255,255,.25); background:rgba(255,255,255,.06);
+    display:flex; align-items:center; justify-content:center; position:relative }
+  .introJoyKnob{ width:34px; height:34px; border-radius:50%; background:#8fce58cc; animation:joyNudge 2.2s ease-in-out infinite }
+  @keyframes joyNudge{ 0%,100%{transform:translate(0,0)} 25%{transform:translate(-11px,0)} 50%{transform:translate(0,-11px)} 75%{transform:translate(11px,0)} }
+  .introCtrlTxt{ font-size:14px; opacity:.85; max-width:280px }
+  .introCineOverlay{ position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center;
+    background:radial-gradient(46% 38% at 50% 44%, rgba(0,0,0,.20) 0%, rgba(0,0,0,.82) 56%, #000 100%);   /* merkez: kahraman silüeti görünür, kenar kapkaranlık */
+    padding-bottom:14vh; pointer-events:none; opacity:1; transition:opacity 1.3s ease; }
+  .introCineText{ color:#dfe8e0; font-size:clamp(18px,4.6vw,26px); font-weight:600; letter-spacing:.04em; text-align:center;
+    opacity:0; transition:opacity 1s ease; text-shadow:0 2px 16px #000; max-width:80vw }
+  @media(prefers-reduced-motion:reduce){ .introJoyKnob{animation:none} }
+</style>
+<div id="introRoot" style="display:none">
+  <div id="introLang" class="introScreen">
+    <div class="introTitle">İhya</div>
+    <div class="introSub" id="introPick">Dil seç · اختر اللغة · Choose language</div>
+    <div class="introLangBtns">
+      <button class="introLangBtn" data-lang="tr">Türkçe</button>
+      <button class="introLangBtn" data-lang="ar" dir="rtl">العربية</button>
+      <button class="introLangBtn" data-lang="en">English</button>
+    </div>
+    <div class="introCtrl">
+      <div class="introKeys"><span class="kw">W</span><span class="ka">A</span><span class="ks">S</span><span class="kd">D</span></div>
+      <div class="introOr" id="introOr">— ya da —</div>
+      <div class="introJoy"><div class="introJoyKnob"></div></div>
+      <div class="introCtrlTxt" id="introCtrlTxt">Hareket etmek için WASD ya da joystick kullan</div>
+    </div>
+  </div>
+  <div id="introCine" class="introCineOverlay" style="display:none">
+    <div class="introCineText" id="introCineText"></div>
+  </div>
+</div>
+
 <div class="top">
   <div class="pill nur">✦ <b id="nur">0</b> <small id="rank">Niyet</small></div>
   <div class="pill streak" id="streakPill" style="display:none">🔥 <b>0</b></div>
@@ -283,7 +335,7 @@
   <button class="iconbtn" id="hayirBtn" title="Hayır Çeşmesi — nûrunu sadakaya dönüştür">🤲</button>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.22 (🐝 arıcılık+bal · bahçe çiçek dolu · pazar yönü düzeldi · seccade tekrar örülür)</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:6px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.5;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.05em">İhya · Faz 11.23 (🎬 sinematik intro + dil seçimi TR/AR/EN + kontrol ipucu · arıcılık · pazar yönü)</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -2841,7 +2893,7 @@ function tick(){
   if(keys['w']||keys['arrowup']) iz-=1; if(keys['s']||keys['arrowdown']) iz+=1;
   if(keys['a']||keys['arrowleft']) ix-=1; if(keys['d']||keys['arrowright']) ix+=1;
   const mag=Math.hypot(ix,iz);
-  const moving = player && mag>0.06 && !mosqueMode && !hacMode;   // mescit/Mekke'deyken hareket durur
+  const moving = player && mag>0.06 && !mosqueMode && !hacMode && !introMode;   // mescit/Mekke/intro'dayken hareket durur
   if(moving){
     ix/=Math.max(mag,1); iz/=Math.max(mag,1);
     const spd=6.0, nx=player.position.x+ix*spd*dt, nz=player.position.z+iz*spd*dt;
@@ -2879,8 +2931,10 @@ function tick(){
   }
   // seccade serilme (açılma) animasyonu
   if(seccadeAnim>0 && laidSeccadeRec){ seccadeAnim-=dt*2.6; const t=Math.max(0,Math.min(1,1-seccadeAnim)); const e=t*t*(3-2*t); const s=0.16+0.84*e; laidSeccadeRec.g.scale.set(s,1,s); if(seccadeAnim<=0){ laidSeccadeRec.g.scale.set(1,1,1); seccadeAnim=0; } }
-  // camera follow (mescitteyken iç mekâna zoom / Mekke'deyken Kâbe'ye bak)
-  if(hacMode){
+  // camera follow (intro / mescit / Mekke / normal)
+  if(introMode){
+    introTick(dt);           // sinematik: kamera + kahraman uyanış pozu
+  } else if(hacMode){
     camera.position.lerp(hacCamPos,0.1);
     camera.lookAt(hacCamLook);
     hacTick(dt);              // tavâf/sa'y animasyonu (hacı Kâbe etrafında döner)
@@ -2893,8 +2947,8 @@ function tick(){
     camera.position.lerp(tmp,0.12);
     camera.lookAt(player.position.x,player.position.y+0.8,player.position.z);
   }
-  // nearest interactable (mescit/Mekke'deyken kapalı)
-  if(player && !mosqueMode && !hacMode){
+  // nearest interactable (mescit/Mekke/intro'dayken kapalı)
+  if(player && !mosqueMode && !hacMode && !introMode){
     let best=null,bd=2.4;
     for(const r of interactables){ const dd=Math.hypot(r.g.position.x-player.position.x,r.g.position.z-player.position.z);
       if(dd<bd){ bd=dd; best=r; } }
@@ -2993,8 +3047,67 @@ function tick(){
 function resize(){ renderer.setSize(innerWidth,innerHeight,false); camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize',resize); resize();
 
+/* ============ INTRO — dil seçimi (TR/AR/EN) + sinematik uyanış ============ */
+const I18N={
+  tr:{ pick:'Dil seç · Choose · اختر', controls:'Hareket için WASD ya da joystick kullan', or:'— ya da —',
+       cine1:'…', cine2:'Neredeyim?', welcome:'☾ Yesrib\'e Hicret', hint:'Bu çorak beldeyi ibadet, kesb-i helâl ve hayırla Medine\'ye çevir 🌱' },
+  ar:{ pick:'اختر اللغة', controls:'استخدم WASD أو عصا التحكّم للتحرّك', or:'— أو —',
+       cine1:'…', cine2:'أين أنا؟', welcome:'☾ الهجرة إلى يثرب', hint:'حوِّل هذه الأرض القاحلة إلى مدينة بالعبادة والكسب الحلال والخير 🌱' },
+  en:{ pick:'Choose language', controls:'Use WASD or the joystick to move', or:'— or —',
+       cine1:'…', cine2:'Where am I?', welcome:'☾ The Hijra to Yathrib', hint:'Turn this barren land into Medina through worship, honest work and charity 🌱' },
+};
+function tI(k){ const L=(S.lang&&I18N[S.lang])?S.lang:'tr'; return (I18N[L]&&I18N[L][k])||I18N.tr[k]||k; }
+function applyLang(){ const L=(S.lang&&I18N[S.lang])?S.lang:'tr';
+  try{ document.documentElement.lang=L; document.documentElement.dir=(L==='ar'?'rtl':'ltr'); }catch(e){}
+  const set=(id,k)=>{ const e=document.getElementById(id); if(e) e.textContent=tI(k); };
+  set('introCtrlTxt','controls'); set('introOr','or'); set('introPick','pick');
+}
+let introMode=false, introT=0, introLit=false, cineStart=0;
+function startIntro(){
+  const r=document.getElementById('introRoot'); if(!r){ endIntro(); return; }
+  document.body.classList.add('intro'); r.style.display='block';
+  document.getElementById('introLang').style.display='flex';
+  document.getElementById('introCine').style.display='none';
+  document.querySelectorAll('.introLangBtn').forEach(b=>{ b.onclick=()=>{ try{audio();}catch(e){} S.lang=b.dataset.lang; applyLang(); save(); startCine(); }; });
+}
+function startCine(){
+  document.getElementById('introLang').style.display='none';
+  const cine=document.getElementById('introCine'); cine.style.display='flex'; cine.style.opacity='1';
+  const txt=document.getElementById('introCineText');
+  introMode=true; introT=0; introLit=false; cineStart=performance.now();
+  try{ gameTime=0.2; updateDayNight(0); }catch(e){}   // fecir: kahraman ezanla uyanır, silüeti görünür kadar ışık
+  try{ audio(); startAmbient(); }catch(e){}
+  setTimeout(()=>{ try{ sndEzan(); }catch(e){} }, 700);   // arkadan gelen kısık ezan
+  txt.textContent=tI('cine1'); requestAnimationFrame(()=>{ txt.style.opacity='1'; });
+  setTimeout(()=>{ txt.style.opacity='0'; setTimeout(()=>{ txt.textContent=tI('cine2'); txt.style.opacity='1'; },900); }, 3200);
+}
+function endIntro(){
+  introMode=false; S.introDone=true; S.introSeen=true; save();
+  const cine=document.getElementById('introCine'); if(cine) cine.style.opacity='0';
+  document.body.classList.remove('intro');
+  if(player){ player.rotation.x=0; player.position.y=0; if(PP&&PP.legL){ swingLeg(PP.legL,0); swingLeg(PP.legR,0); } }
+  setTimeout(()=>{ const r=document.getElementById('introRoot'); if(r) r.style.display='none';
+    banner(tI('welcome')); setTimeout(()=>toast(tI('hint')),2200); }, 1200);
+}
+// sinematik: yakın-alçak kamera; kahraman yerde oturur → sağa-sola bakar → ayağa kalkar → karanlık açılır (evinde bulur)
+function introTick(dt){
+  if(!introMode||!player) return;
+  const px=player.position.x, pz=player.position.z, t=(performance.now()-cineStart)/1000;   // GERÇEK zaman (fps-bağımsız → düşük fps'te takılmaz)
+  camera.position.lerp(tmp.set(px,1.05,pz+2.6), Math.min(1,dt*4)); camera.lookAt(px,0.95,pz);
+  let bow=0, ry=Math.PI, legBend=0;
+  if(t<2.0){ bow=0.55; legBend=1.2; }                                                        // yerde oturur (öne eğik, bacaklar kıvrık)
+  else if(t<3.3){ bow=0.5; legBend=1.15; ry=Math.PI-0.5*Math.sin((t-2.0)/1.3*Math.PI*2); }   // yavaşça sağa-sola bakınır
+  else if(t<5.4){ const k=Math.min(1,(t-3.3)/2.0); bow=0.5*(1-k); legBend=1.15*(1-k); }       // doğrulup ayağa kalkar
+  const kp=Math.min(1,dt*8);
+  player.rotation.x += (bow-player.rotation.x)*kp;
+  player.rotation.y += (ry-player.rotation.y)*Math.min(1,dt*5);
+  if(PP&&PP.legL){ swingLeg(PP.legL, legBend); swingLeg(PP.legR, legBend); }
+  if(!introLit && t>=4.6){ introLit=true; const cine=document.getElementById('introCine'); if(cine) cine.style.opacity='0'; }  // karanlık açılır (evinde bulur)
+  if(t>=6.8) endIntro();
+}
+
 /* ============ BOOT ============ */
-console.log('%cİHYA sürüm: Faz 11.22 — Hurma Bahçesi çiçek dolu + ARICILIK (arı kovanı → bal hasadı → pazarda satış); Pazar+tüccar yönü düzeldi (önleri kameraya); seccade kaybolunca yeniden örülebilir','color:#8fce58;font-weight:bold');
+console.log('%cİHYA sürüm: Faz 11.23 — SİNEMATİK INTRO: başta dil seçimi (TR/AR/EN, Arapça RTL) + kontrol ipucu (WASD/joystick); kahraman fecir loşunda uyanır (otur→bakın→ayağa kalk, kısık ezan) → evinde bulur; arıcılık+bal; pazar yönü','color:#8fce58;font-weight:bold');
 (async()=>{
   let n=0;
   for(const m of MODELS){ await load(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
@@ -3006,10 +3119,8 @@ console.log('%cİHYA sürüm: Faz 11.22 — Hurma Bahçesi çiçek dolu + ARICIL
   updateSeccadeBtn(); checkZekat(); updateWoolHint(); updateFastBtn(); updateAdaletHud();
   if(S.laidSeccade) placeLaidSeccade(S.laidSeccade.x, S.laidSeccade.z, S.laidSeccade.ry, false);  // önceki serili seccade yerinde kalsın
   document.getElementById('load').style.display='none';
-  if(!S.introSeen){ S.introSeen=true; save();
-    setTimeout(()=>banner('☾ Yesrib\'e Hicret'),700);
-    setTimeout(()=>toast('Bu çorak beldeyi; ibadet, kesb-i helâl ve hayırla Medine\'ye çevir 🌱'),2600);
-  }
+  applyLang();   // kayıtlı dil varsa uygula
+  if(!S.introDone){ startIntro(); }   // ilk açılış: dil seçimi + sinematik uyanış (HUD gizli)
   // yeni gün artık gün/gece döngüsü tamamlanınca (updateDayNight → onNewDay) olur
   setInterval(updateGatherRegrow, 3000);   // hasat ağaçları yeniden verir
   window.__ihya3d={S, interactables, player:()=>player, move:(x,z)=>{jVec.x=x;jVec.y=z;},

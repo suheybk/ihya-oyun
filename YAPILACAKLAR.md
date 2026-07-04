@@ -256,6 +256,17 @@ görünen fallback kutusu = yüklenememiş model). Bu yüzden dev sunucumda bile
 - [ ] **Sinematik intro + dil (TR/AR/EN)** — SIRADA (bu oturumun büyük işi): başta HUD gizli, kontrol-ipucu +
   dil seçim ekranı; yakın çekim kahraman yerde oturur→sağa-sola bakar→kalkar (karanlık+kısık ezan)→evinde bulur. i18n altyapısı.
 
+### Faz 11.23 — Sinematik intro + dil seçimi (TR/AR/EN) (2026-07-04, Suheyb)
+- [x] **Başta HUD gizli**: `body.intro > *:not(#c):not(#introRoot){display:none!important}`; boot'ta `!S.introDone`→`startIntro()`.
+- [x] **Dil + kontrol ekranı** (`#introLang`): "İhya" başlık + **TR/AR/EN** + WASD tuşları + animasyonlu joystick +
+  kontrol ipucu. Dil seçince `S.lang` kaydedilir, `applyLang()` (Arapça→`dir=rtl`, HUD aynalanır). i18n:
+  `I18N{tr,ar,en}`+`tI(k)` (intro 3 dilde; tam UI çevirisi ilerideki faz).
+- [x] **Sinematik uyanış** (`startCine`/`introTick`): fecir loşu (`gameTime=0.2`), yakın-alçak kamera; kahraman
+  oturur (öne eğik+bacak kıvrık)→sağa-sola bakınır→ayağa kalkar; arkadan kısık ezan; "…"→"Neredeyim?"; **radial
+  vignette** (merkez kahraman görünür, kenar karanlık)→kalkınca opacity ile açılır. **GERÇEK ZAMAN**
+  (`performance.now`)+fps-bağımsız lerp → düşük fps'te takılmaz (ilk dt-cap bug'ı düzeltildi). ~6.8s→`endIntro`.
+  Uçtan uca doğrulandı (dil→AR/RTL→sinematik→HUD döner). **İleride**: tam UI i18n + Endonezyaca/Malayca.
+
 ## 📌 3D Modeller ✅ (2026-07-02)
 Prompt listesindeki **36 model** Blender'da üretilip `models/*.glb` olarak eklendi
 (hayvanlar, hurma/dut ağaçları, eşya/pickup, pazar, yapılar, Mescid-i Nebevî, NPC'ler).
