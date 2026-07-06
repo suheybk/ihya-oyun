@@ -1200,7 +1200,7 @@ function applyIslandLock(){
 }
 
 /* ============ HASAT / TOPLAMA (Faz 1) — kesb-i helâl ============ */
-const GOODS={ hurma:{ic:'🌴',nm:'Hurma'}, dut:{ic:'🫐',nm:'Dut'}, sut:{ic:'🥛',nm:'Süt'}, yun:{ic:'🧶',nm:'Yün'}, ekmek:{ic:'🍞',nm:'Ekmek'}, su:{ic:'💧',nm:'Su'}, bal:{ic:'🍯',nm:'Bal'}, bugday:{ic:'🌾',nm:'Buğday'}, un:{ic:'🥣',nm:'Un'}, yumurta:{ic:'🥚',nm:'Yumurta'}, corek:{ic:'🥯',nm:'Çörek'} };
+const GOODS={ hurma:{ic:'🌴',nm:'Hurma'}, dut:{ic:'🫐',nm:'Dut'}, sut:{ic:'🥛',nm:'Süt'}, yun:{ic:'🧶',nm:'Yün'}, ekmek:{ic:'🍞',nm:'Ekmek'}, su:{ic:'💧',nm:'Su'}, bal:{ic:'🍯',nm:'Bal'}, bugday:{ic:'🌾',nm:'Buğday'}, un:{ic:'🥣',nm:'Un'}, yumurta:{ic:'🥚',nm:'Yumurta'}, corek:{ic:'🥯',nm:'Çörek'}, pekmez:{ic:'🫙',nm:'Pekmez'}, balik:{ic:'🐟',nm:'Balık'} };
 // Hurma Bahçesi'nde toplanabilir ağaçlar (tekrarlanır: topla → hasat hali → cooldown → yeniden dolar)
 // Tüm adalara EŞİT dağıt: her adada 1 hurma + 1 dut ağacı (kenarlarda, görev hattından uzak)
 // Gather node'ları ada'nın 4 KÖŞESİNE dağıt (ada-yarıçapı-farkında): merkez görev hattından (z≈±2.6)
@@ -1220,6 +1220,18 @@ GATHER_DEFS.push({id:'wheat_bahce',   islId:'bahce',   pos:[13.5,0,-4.3], full:'
 GATHER_DEFS.push({id:'wheat_mahalle', islId:'mahalle', pos:[37.5,0,-4.5], full:'wheat', bare:'plot_sprout', item:'bugday', amount:3, cd:35000, scale:1.25});
 // KÜMES — Hâne adasında yumurta düğümü (tavuk peşinde koşmadan, kümesten yumurta topla). full=bare='coop' → görsel değişmez.
 GATHER_DEFS.push({id:'coop_ev', islId:'ev', pos:[4,0,4], full:'coop', bare:'coop', item:'yumurta', amount:2, cd:20000, scale:1.35});
+// GÖLET (Atölye adası) — balık tut → balik (FOOD; muhtaca ikram / pazar). full=bare='pond' (görsel tükenmez).
+GATHER_DEFS.push({id:'pond_atolye', islId:'atolye', pos:[13.4,0,-15.9], full:'pond', bare:'pond', item:'balik', amount:1, cd:30000, scale:1.0});
+// Prosedürel GÖLET modeli — tpl'e enjekte edilir (pond.glb gelince otomatik onun yerini alır)
+function buildPondTemplate(){
+  const g=new THREE.Group(); const M=(c,r,o)=>new THREE.MeshStandardMaterial({color:c,roughness:r==null?0.9:r,transparent:o!=null,opacity:o==null?1:o});
+  const water=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.0,0.12,28), new THREE.MeshStandardMaterial({color:0x3f8fbf,roughness:0.25,metalness:0.1,transparent:true,opacity:0.9})); water.position.y=0.06; water.name='Water'; g.add(water);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(1.12,0.1,8,28), M(0x6f5a3a)); rim.position.y=0.06; rim.rotation.x=Math.PI/2; rim.name='Rim'; g.add(rim);
+  for(let i=0;i<5;i++){ const a=i*1.257+0.3; const s=new THREE.Mesh(new THREE.SphereGeometry(0.13+i%2*0.06,8,6),M(0x9a9186)); s.position.set(Math.cos(a)*1.12,0.1,Math.sin(a)*1.12); s.scale.y=0.7; s.name='Rock'+i; g.add(s); }   // kenar taşları
+  for(let i=0;i<4;i++){ const a=i*1.9+1.0; const lp=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.02,12),M(0x4f8a4a)); lp.position.set(Math.cos(a)*0.55,0.13,Math.sin(a)*0.55); lp.name='Lily'+i; g.add(lp); }   // nilüfer yaprakları
+  for(let i=0;i<3;i++){ const a=i*2.1+0.6; for(let j=0;j<3;j++){ const r=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.03,0.55,5),M(0x6f8f3a)); r.position.set(Math.cos(a)*1.0+j*0.05,0.32,Math.sin(a)*1.0); r.rotation.z=(j-1)*0.12; r.name='Reed'+i+j; g.add(r); } }   // saz/kamış tutamı
+  return g;
+}
 // Prosedürel ARI KOVANI (skep) modeli — tpl'e enjekte edilir (base64 modeli yok)
 function buildHiveTemplate(){
   const g=new THREE.Group(); const M=(c,r)=>new THREE.MeshStandardMaterial({color:c,roughness:r==null?0.85:r});
@@ -1256,7 +1268,9 @@ function bagName(){ return (S.bag>=2)?'Büyük Çanta':(S.bag>=1)?'Çanta':'—'
 function invFull(){ return invCount()>=invCap(); }
 function invAdd(item,n){ const room=Math.max(0,invCap()-invCount()); const add=Math.min(n,room); if(add>0) S.inv[item]=(S.inv[item]||0)+add; return add; }   // kapasiteyi aşmaz; eklenen miktarı döner
 // Bekleme (cooldown) mesajı — kaynağa özel (kuyu doluyor / arı bal yapıyor / tavuk yumurtluyor …)
-const REGROW_MSG={ su:'💧 Kuyu suyla doluyor', bugday:'🌾 Başaklar olgunlaşıyor', yumurta:'🥚 Tavuklar yumurtluyor', bal:'🍯 Arılar bal yapıyor', hurma:'🌴 Hurmalar olgunlaşıyor', dut:'🍇 Dutlar olgunlaşıyor' };
+const REGROW_MSG={ su:'💧 Kuyu suyla doluyor', bugday:'🌾 Başaklar olgunlaşıyor', yumurta:'🥚 Tavuklar yumurtluyor', bal:'🍯 Arılar bal yapıyor', hurma:'🌴 Hurmalar olgunlaşıyor', dut:'🍇 Dutlar olgunlaşıyor', balik:'🎣 Balıklar yeme geliyor' };
+// Toplama butonu — işe özel fiil (kaynağa göre); listede yoksa jenerik "Topla"
+const GATHER_VERB={ su:'💧 Su çek', bal:'🍯 Bal al', yumurta:'🥚 Yumurta al', bugday:'🌾 Buğday biç', balik:'🎣 Balık tut' };
 function doGather(rec){
   const def=rec.def;
   if(!isUnlocked(def.islId)){ toast('🔒 Burası henüz açılmadı'); return; }
@@ -1264,9 +1278,9 @@ function doGather(rec){
   if(invFull()){ toast('🎒 Dağarcık dolu ('+invCap()+') — sat/kullan ya da Atölye\'de çanta ör'); return; }
   facePlayer(rec.g.position);
   // İŞE ÖZEL toplama animasyonu (item'e göre)
-  const GK={ su:['draw',1.7], bugday:['reap',1.7], yumurta:['coop',1.4], bal:['honey',1.6] };
+  const GK={ su:['draw',1.7], bugday:['reap',1.7], yumurta:['coop',1.4], bal:['honey',1.6], balik:['fish',1.9] };
   const gk=GK[def.item];
-  if(gk) playAction(gk[1], gk[0]);                        // su=kuyudan çek · buğday=orakla biç · yumurta=kümesten al · bal=kovandan al
+  if(gk) playAction(gk[1], gk[0]);                        // su=kuyudan çek · buğday=orakla biç · yumurta=kümesten al · bal=kovandan al · balık=olta
   else   playAction(1.1,'pluck');                         // hurma/dut: yukarı uzanıp koparma
   const got=invAdd(def.item, def.amount);
   S.gather[def.id]=Date.now()+def.cd;
@@ -1509,6 +1523,13 @@ function craftCorek(){ if((S.inv.un||0)<COREK_UN || (S.inv.yumurta||0)<COREK_YUM
   S.inv.un-=COREK_UN; if(S.inv.un<=0) delete S.inv.un; S.inv.yumurta-=COREK_YUMURTA; if(S.inv.yumurta<=0) delete S.inv.yumurta;
   invAdd('corek', COREK_YIELD); save(); refreshHUD(); if(document.getElementById('inv').classList.contains('show'))renderInv(); sndFanfare(); banner('🥯 Çörek pişti');
   setTimeout(()=>toast('Yumurtalı çörek (+'+COREK_YIELD+') — besleyici. Aç kalana ver ya da pazarda sat.'),1300); }
+// PEKMEZ — dut + bal kazanda kaynatılır → koyu pekmez (FOOD; işlenmiş, pazarda en değerli). Atölye'de Kazan istasyonu.
+const PEKMEZ_DUT=3, PEKMEZ_BAL=1, PEKMEZ_YIELD=2;
+function craftPekmez(){ if((S.inv.dut||0)<PEKMEZ_DUT || (S.inv.bal||0)<PEKMEZ_BAL){ toast('🫙 '+PEKMEZ_DUT+' dut + '+PEKMEZ_BAL+' bal gerek'); return; }
+  playAction(2.0,'stir');   // kazanı kepçeyle karıştır
+  S.inv.dut-=PEKMEZ_DUT; if(S.inv.dut<=0) delete S.inv.dut; S.inv.bal-=PEKMEZ_BAL; if(S.inv.bal<=0) delete S.inv.bal;
+  invAdd('pekmez', PEKMEZ_YIELD); save(); refreshHUD(); if(document.getElementById('inv').classList.contains('show'))renderInv(); sndFanfare(); banner('🫙 Pekmez kaynadı');
+  setTimeout(()=>toast('Dut ve balı kaynatıp pekmez yaptın (+'+PEKMEZ_YIELD+') — kışa azık, muhtaca kuvvet, pazarda değerli.'),1300); }
 // yerde serili seccade = toplanabilir düğüm; almazsan orada kalır
 function placeLaidSeccade(x,z,ry,animate){
   removeLaidSeccade();
@@ -2137,7 +2158,7 @@ function applyProfile(){ if(isChild()){ S.hasSeccade=true; } save(); updateSecca
 
 /* ============ MEDİNE PAZARI (Faz 3) — kesb-i helâli dirhem'e çevir ============ */
 const MARKET_POS={ islId:'sehir', pos:[67,0,-4] };
-const PRICES={ hurma:2, dut:2, sut:3, yun:4, ekmek:3, su:1, bal:6, bugday:2, yumurta:3, corek:5 };   // bal = en değerli hasat; un craft-ara ürün (satılmaz); çörek = katma değerli (un+yumurta)
+const PRICES={ hurma:2, dut:2, sut:3, yun:4, ekmek:3, su:1, bal:6, bugday:2, yumurta:3, corek:5, pekmez:8, balik:5 };   // bal = en değerli hasat; un craft-ara ürün (satılmaz); çörek = katma değerli; pekmez = işlenmiş (dut+bal, en değerli); balık = değerli yiyecek
 let marketRec=null, marketDecor=[], marketMerchant=null;
 function buildMarket(){
   marketDecor=[];
@@ -2184,7 +2205,7 @@ function renderMarket(){
 }
 
 /* ============ TEKRARLANAN HAYIR — NPC'ler (Faz 4): aynî sadaka ============ */
-const FOOD=['hurma','dut','ekmek','sut','yumurta','corek'];   // yiyecek kategorisi (muhtaçlara verilebilir)
+const FOOD=['hurma','dut','ekmek','sut','yumurta','corek','pekmez','balik'];   // yiyecek kategorisi (muhtaçlara verilebilir)
 function foodCount(){ return FOOD.reduce((s,k)=>s+(S.inv[k]||0),0); }
 function takeFood(n){ let need=n; for(const k of FOOD){ while(need>0 && (S.inv[k]||0)>0){ S.inv[k]--; if(S.inv[k]<=0) delete S.inv[k]; need--; } } return n-need; }
 const NPC_DEFS=[
@@ -2799,10 +2820,21 @@ function buildLoom(g){   // tezgâh: ahşap çerçeve + çözgü iplikleri + yar
   stAdd(new THREE.BoxGeometry(1.15,0.62,0.05), stMat(0x9a5a44,1), 0,0.5,0.03, g);
   for(const [cy,cc] of [[0.36,0xd8b048],[0.5,0xe8ddc4],[0.64,0x4f7a5f]]) stAdd(new THREE.BoxGeometry(1.05,0.09,0.06), stMat(cc,1), 0,cy,0.04, g);
 }
+function buildCauldron(g){   // kazan: taş ocak + ateş + kara kazan + koyu pekmez + kepçe
+  const stone=stMat(0x8a8078), pot=stMat(0x33302e,0.55), wood=stMat(0x8a5a2a,0.9);
+  for(let i=0;i<8;i++){ const a=i*Math.PI/4; stAdd(new THREE.BoxGeometry(0.2,0.22,0.14), stone, Math.cos(a)*0.62,0.11,Math.sin(a)*0.62, g); }   // ocak taşları (halka)
+  stAdd(new THREE.ConeGeometry(0.4,0.4,10), new THREE.MeshStandardMaterial({color:0x2a1207,emissive:0xe0540c,emissiveIntensity:0.75,roughness:1}), 0,0.22,0, g);   // ateş/köz
+  stAdd(new THREE.SphereGeometry(0.6,18,12,0,Math.PI*2,0,Math.PI*0.62), pot, 0,0.7,0, g);   // kazan gövdesi (yarım küre)
+  stAdd(new THREE.TorusGeometry(0.58,0.07,8,20), pot, 0,0.7,0, g).rotation.x=Math.PI/2;      // ağız çemberi
+  stAdd(new THREE.CylinderGeometry(0.5,0.5,0.05,20), stMat(0x5a2233,0.4), 0,0.72,0, g);       // koyu pekmez yüzeyi
+  const lad=stAdd(new THREE.CylinderGeometry(0.03,0.03,0.7,8), wood, 0.3,0.95,0.15, g); lad.rotation.z=0.5;   // kepçe sapı
+  stAdd(new THREE.SphereGeometry(0.1,10,8,0,Math.PI*2,0,Math.PI*0.6), pot, 0.52,0.72,0.26, g);                // kepçe kâsesi
+}
 const ATOLYE_STATIONS=[
   {key:'mill', tpl:'mill', build:buildMill, pos:[13.4,-13.6], ry:0.35,  nm:'Değirmen', ic:'🌾', craft:'un',      sBtn:'🌾 Buğday öğüt',  sTitle:'Değirmen — buğday öğüt (un yap)'},
   {key:'oven', tpl:'oven', build:buildOven, pos:[16.6,-15.7], ry:0.0,   nm:'Tandır',   ic:'🍞', craft:'ekmek',   sBtn:'🍞 Ekmek pişir', sTitle:'Tandır — ekmek pişir'},
   {key:'loom', tpl:'loom', build:buildLoom, pos:[19.6,-13.6], ry:-0.35, nm:'Tezgâh',   ic:'🧶', craft:'seccade', sBtn:'🧶 Yünü işle',   sTitle:'Tezgâh — yünü işle (seccade · çanta)'},
+  {key:'cauldron', tpl:'cauldron', build:buildCauldron, pos:[19.6,-15.9], ry:-0.6, nm:'Kazan', ic:'🫙', craft:'pekmez', sBtn:'🫙 Pekmez kaynat', sTitle:'Kazan — dut+bal → pekmez'},
 ];
 function buildAtolye(){
   const isl=WORLD.islands.find(i=>i.id==='atolye'); if(!isl) return;
@@ -2837,6 +2869,9 @@ function doStation(rec){
     if((S.bag||0)<2) opts.push({l:'🎒 Büyük çanta ör ('+yun+'/'+BAG_YUN[2]+' yün → 200 kapasite)', act:()=>craftBag(2)});
     opts.push({l:'Kapat'});
     openDialog({ic:'🧵',title:'Tezgâh', start:'s0', steps:{ s0:{who:'Tezgâh', txt:'Yünü tezgâhta işle:\n<b>'+SECCADE_YUN+' yün → seccade</b> (her yerde namaz)\n<b>'+BAG_YUN[1]+' yün → çanta</b> (150 taşı) · <b>'+BAG_YUN[2]+' yün → büyük çanta</b> (200 taşı)\n\nElinde: '+yun+' yün · Çantan: '+bagName()+' ('+invCap()+' kapasite)', ref:'<b>Âyet:</b> «Namazı dosdoğru kılın.» (Bakara 2/43)', opts} }});
+  } else if(rec.craft==='pekmez'){
+    const dut=S.inv.dut||0, bal=S.inv.bal||0, pek=S.inv.pekmez||0;
+    openDialog({ic:'🫙',title:'Kazan', start:'s0', steps:{ s0:{who:'Pekmez kaynat', txt:'Dut ve balı kazanda ağır ateşte kaynat, koyu pekmez yap; kışa azık, muhtaca kuvvet.\n\n<b>'+PEKMEZ_DUT+' dut + '+PEKMEZ_BAL+' bal → '+PEKMEZ_YIELD+' pekmez</b>\n\nElinde: '+dut+' dut · '+bal+' bal · '+pek+' pekmez.', ref:'<b>Âyet:</b> «Yiyin, için; fakat israf etmeyin.» (A\'râf 7/31)', opts:[ {l:'🫙 Pekmez kaynat', act:()=>craftPekmez()}, {l:'Kapat'} ]} }});
   }
 }
 
@@ -3131,6 +3166,7 @@ function buildWorld(){
   // her adanın imtihan meydanı
   buildExamNodes();
   if(!tpl.hive) tpl.hive=buildHiveTemplate();   // arı kovanı prosedürel modelini tpl'e ekle (gather 'hive' bunu kullanır)
+  if(!tpl.pond) tpl.pond=buildPondTemplate();   // gölet prosedürel modeli (gather 'pond' → balık tut); pond.glb gelince otomatik değişir
   buildGatherNodes();   // Medine: Hurma Bahçesi'nde toplanabilir ağaçlar + arı kovanı
   buildAnimals();       // Medine: dolaşan hayvanlar (çobanlık)
   buildMarket();        // Medine: Şehir'de Sûk (pazar)
@@ -3742,6 +3778,13 @@ function tick(){
       else if(actionKind==='weave'){                                                                 // DOKUMA/ÖRGÜ: tezgâhta mekiği ileri-geri
         const w=Math.sin(et*7.5); aL=-1.25+w*0.32; aR=-1.25-w*0.32;                                   // eller dönüşümlü küçük hareket
         player.rotation.x += (0.1 - player.rotation.x)*0.12; }                                        // tezgâha hafif eğik
+      else if(actionKind==='stir'){                                                                  // PEKMEZ: kazanı kepçeyle karıştır (yavaş döngüsel)
+        aL=-1.05; aR=-1.05+Math.sin(et*3.6)*0.5;                                                      // sağ el kepçeyle döndürür, sol el sabit tutar
+        player.rotation.x += (0.16 - player.rotation.x)*0.12; }                                       // kazana hafif eğil
+      else if(actionKind==='fish'){                                                                  // BALIK TUT: oltayı öne tut, ara ara çek (bekle)
+        const w=Math.sin(et*2.0), jerk=Math.max(0,Math.sin(et*2.0-1.2));                              // yavaş bekleyiş + ara sıra çekiş
+        aL=-1.45-jerk*0.35; aR=-1.45-jerk*0.35;                                                       // iki el önde oltayı tutar, çekişte yukarı
+        player.rotation.x += (0.06+jerk*0.08 - player.rotation.x)*0.12; }                             // suya hafif eğik, çekişte doğrulur
       else { const w=Math.sin(et*17); aL=-1.15+w*0.5; aR=-1.15-w*0.5; }                             // genel çalışma: kollar öne-aşağı
       swingLeg(PP.armL, aL); swingLeg(PP.armR, aR);
       if(actionT<=0 && actionKind==='namaz') lastActT = nowS - 11;   // namaz bitti + AFK → seccadede otur (10sn beklemeden)
@@ -3836,7 +3879,7 @@ function tick(){
         else if(near.npc){ actBtn.textContent = npcReady(near.def) ? (near.q.ic+' Ver') : '🙏 Verdin'; }
         else if(near.market){ actBtn.textContent='🛒 Pazar'; }
         else if(near.animal){ actBtn.textContent = animalReady(near.def) ? (near.q.ic+' '+near.def.label) : '🐑 Dinleniyor'; }
-        else if(near.gather){ actBtn.textContent = nodeReady(near.def) ? (near.q.ic+' Topla') : '🌱 Olgunlaşıyor'; }
+        else if(near.gather){ actBtn.textContent = nodeReady(near.def) ? (GATHER_VERB[near.def.item]||(near.q.ic+' Topla')) : '🌱 Olgunlaşıyor'; }
         else if(near.exam){ actBtn.textContent = S.conquered[near.islId] ? 'Meydan ✓' : (examReady(near.islId) ? '📝 İmtihana Gir' : '🔒 Önce dersler'); }
         else actBtn.textContent = S.done[near.q.id] ? 'Bak ✓'
           : (questAvailable(near.q) ? 'Etkileşim '+near.q.ic : '🔒 Sırası değil');

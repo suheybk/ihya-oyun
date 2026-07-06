@@ -207,18 +207,24 @@ girer (yoksa şu an prosedürel placeholder çiziliyor). Origin **taban-merkez, 
    in progress with a few colored horizontal stripes (muted gold, cream, olive-green — Medine kilim
    deseni). Wooden frame warm brown. ~1.5 m tall.
 
-> İleride aynı adaya eklenebilecek istasyonlar (şimdilik gerekmez): `cauldron.glb` (pekmez kazanı —
-> dut/bal→pekmez), `brickmold.glb` (kerpiç kalıbı — su+balçık→kerpiç). İstersen bunların da promptunu veririm.
+4. **`cauldron.glb` — Kazan (pekmez)** ✅ *kodda (prosedürel, GLB gelince otomatik swap; tpl adı `cauldron`)*:
+   a big **cast-iron cauldron** on a ring of hearth stones with a low ember fire underneath — dark
+   round pot (charcoal), a **dark red/purple molasses (pekmez) surface** inside, a long wooden **ladle**
+   resting across the rim, subtle steam. Warm, toy-like claymorphism. Origin taban-merkez, Y-up, ~1.2 m.
+   (Kullanıcı isteği: dut+bal→pekmez zinciri; şu an prosedürel kazan çiziliyor.)
+
+> İleride eklenebilecek istasyon (şimdilik yapılmadı — balçık kaynağı + ne inşa edileceği kararı gerek):
+> `brickmold.glb` (kerpiç kalıbı — su+balçık→kerpiç). İstersen promptunu + tasarımını veririm.
 
 ---
 
-## 🎣 13) İLERİDE — Gölet & Balık (plan, henüz yapılmadı)
-Kullanıcı isteği: ufak bir **gölet** kurup **balık tutmak**. İleride yapılacak. Gerekebilecek modeller:
+## 🎣 13) Gölet & Balık ✅ YAPILDI (prosedürel, GLB-hazır)
+Atölye adasının GB köşesinde (`pond_atolye` [13.4,-15.9]) **gölet** gather-düğümü kuruldu: "🎣 Balık tut"
+→ `balik` (FOOD; muhtaca ikram / pazarda 5 dirhem) + `fish` olta animasyonu. Prosedürel gölet çiziliyor
+(`buildPondTemplate`, tpl adı `pond`); `pond.glb` gelince otomatik onun yerini alır.
 - **`pond.glb` — Gölet**: small round low-poly pond — soft blue water disc + reed/cattail tufts + a few
-  rocks + lily pads around the rim. Calm, toy-like. ~2 m çap.
-- **`fish.glb` — Balık** (opsiyonel): tiny cute fish (silver/orange), for a caught-fish pickup icon/pop.
-- **`rod.glb` — Olta** (opsiyonel): simple wooden fishing rod + line; ya da oyuncu eline prosedürel çubuk.
+  rocks + lily pads around the rim. Calm, toy-like. ~2 m çap. Origin taban-merkez, Y-up.
+- **`fish.glb` — Balık** (opsiyonel): tiny cute fish (silver/orange), tutulan balık pop/ikonu için.
+- **`rod.glb` — Olta** (opsiyonel): şu an oyuncu eline prosedürel çubuk yok; el hareketi olta jestini veriyor.
 
-**Mekanik fikri:** göletin kenarında "Balık tut" etkileşimi → kısa bekleme/olta animasyonu → `balik` (fish)
-ürünü (FOOD, pazarda değerli). Craft: balık → (tandırda) "balık ızgara/kızartma" ya da doğrudan muhtaca ikram.
-Atölye/Hâne yakınına küçük bir gölet dekoru; ya da yeni küçük bir "Gölet" side-alanı.
+**İleride (opsiyonel):** balık → tandırda "balık kızartma" (ayrı FOOD, daha değerli) — istersen eklenir.
