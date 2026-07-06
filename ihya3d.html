@@ -3041,7 +3041,7 @@ function dlgEmanet(){ const c=curEmanet(); return { ic:'📿', title:'Emaneti Ul
     {l:'Şimdi olmaz'} ]},
 }}; }
 function takePouch(){ if(S.carryPouch||!player) return; S.carryPouch=true;
-  if(!carryPouch){ const it=instance('trust_pouch'); carryPouch=it.g; carryPouch.scale.setScalar(0.85); carryPouch.position.set(-0.16,0.9,0.34); player.add(carryPouch);   // SOL kolda (kıvrık) göğüs hizası }
+  if(!carryPouch){ const it=instance('trust_pouch'); carryPouch=it.g; carryPouch.scale.setScalar(0.85); carryPouch.position.set(-0.16,0.9,0.34); player.add(carryPouch); }   // SOL kolda (kıvrık) göğüs hizası
   carryPouch.visible=true; save(); sndChime(); banner('📿 Emaneti aldın');
   setTimeout(()=>toast(curEmanet().carry),1200);
 }
@@ -3110,7 +3110,7 @@ function buildScenarios(){
     sceneRec('faydali',q('hayir'),anchor,[],'sehir','🤲 Sebil yaptır','🤲 Topluma faydalı iş yap');
     OBSTACLES.push({x:67,z:2,r:0.7}); }
   // taşınan emanet kesesini geri yükle (kaydedilmiş oyun)
-  if(S.carryPouch && player){ const it=instance('trust_pouch'); carryPouch=it.g; carryPouch.scale.setScalar(0.85); carryPouch.position.set(-0.16,0.9,0.34); player.add(carryPouch);   // SOL kolda (kıvrık) göğüs hizası }
+  if(S.carryPouch && player){ const it=instance('trust_pouch'); carryPouch=it.g; carryPouch.scale.setScalar(0.85); carryPouch.position.set(-0.16,0.9,0.34); player.add(carryPouch); }   // SOL kolda (kıvrık) göğüs hizası
 }
 function doScenario(rec){
   if(rec.islId && !isUnlocked(rec.islId)){ toast('🔒 Burası henüz açılmadı'); return; }
