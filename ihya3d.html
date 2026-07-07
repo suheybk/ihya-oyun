@@ -76,7 +76,7 @@
   .mcdBar>i{display:block;height:100%;width:0%;border-radius:6px;background:linear-gradient(90deg,#e9c478,#d9a441);
     background-size:200% 100%;transition:width .4s linear;animation:mcdShimmer 1.7s linear infinite}
   @keyframes mcdShimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-  .toolbar{position:fixed;right:12px;top:88px;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .toolbar{position:fixed;right:12px;top:104px;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}
   .woolhint{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:6;pointer-events:auto;cursor:default;
     display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:800;
     background:var(--panel);color:var(--muted);box-shadow:0 4px 14px #0002;border:1px solid #0000}
@@ -135,7 +135,7 @@
     .top{gap:6px;padding:8px 9px}
     .pill{padding:6px 9px;font-size:12.5px}
     #skySvg{width:98px}
-    .toolbar{top:78px}
+    .toolbar{top:96px}
   }
   .prog{flex:1;max-width:180px;height:9px;background:#ffffff88;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px #0001}
   .prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f8f63,#5fb98a);transition:width .5s}
@@ -3023,8 +3023,8 @@ function buildRod(){
   const wood=new THREE.MeshStandardMaterial({color:0x8a5a2a,roughness:0.9});
   const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.028,1.15,6), wood); pole.position.y=0.5; g.add(pole);   // çubuk yukarı uzanır
   const tip=new THREE.Mesh(new THREE.SphereGeometry(0.03,6,5), wood); tip.position.y=1.06; g.add(tip);
-  const line=new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.005,0.85,4), new THREE.MeshStandardMaterial({color:0xe8e8e8,roughness:0.5})); line.position.set(0,0.62,0.42); line.rotation.x=0.5; g.add(line);   // misina uçtan öne-aşağı sarkar
-  const bob=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,5), new THREE.MeshStandardMaterial({color:0xd23b3b})); bob.position.set(0,0.24,0.78); g.add(bob);   // şamandıra
+  const line=new THREE.Mesh(new THREE.CylinderGeometry(0.005,0.005,0.87,4), new THREE.MeshStandardMaterial({color:0xe8e8e8,roughness:0.5})); line.position.set(0,0.755,0.31); line.rotation.x=-0.79; g.add(line);   // misina TAHTANIN TEPE (havadaki) ucundan öne-aşağı sarkar (tip≈1.06 → şamandıra)
+  const bob=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,5), new THREE.MeshStandardMaterial({color:0xd23b3b})); bob.position.set(0,0.45,0.62); g.add(bob);   // şamandıra: misinanın ucunda
   g.traverse(o=>{ if(o.isMesh) o.frustumCulled=false; });
   g.scale.setScalar(0.9);   // yönelim oyuncu-frame'inde tick'te ayarlanır (rotation.x)
   return g;
