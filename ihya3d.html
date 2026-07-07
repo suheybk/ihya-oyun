@@ -871,9 +871,21 @@ const today=()=>new Date().toISOString().slice(0,10);
 const yesterday=()=>new Date(Date.now()-86400000).toISOString().slice(0,10);
 
 /* ---- NÛR RÜTBELERİ (biriken nûr'a anlam) ---- */
+/* ---- UI ÇEVİRİ (İngilizce — Faz 1: kabuk). tU(k): lang='en' ise EN döner, değilse null → çağrı yerindeki TR varsayılan kullanılır ---- */
+const UI_STR={ en:{
+  rank_0:'Intention', rank_1:'Seeker', rank_2:'Diligent', rank_3:'Ihya Wayfarer', rank_4:'Ihya Devotee', rank_5:'Ihya Master',
+  ad_ok:'Peace', ad_warn:'Unrest', ad_bad:'Injustice',
+  isles:'isles',
+  vz_head:'Imam\'s Duties', vz_baris:'Reconcile', vz_adalet:'Justice', vz_emanet:'Trust',
+  vz_pending:'● Pending', vz_done:'✓ Done', vz_locked:'🔒 locked', vz_given:'📜 The imam gave you the duties: reconcile · judge · trust ✓',
+  p_satchel:'Satchel', p_market:'Market', p_mosque:'Mosque', p_charity:'Fountain of Good', p_ledger:'Case Ledger', p_exam:'Trial',
+  close:'Close', mosque_exit:'🚪 Leave the mosque',
+  tut_next:'Next ›', tut_start:'Begin ✓', tut_prev:'‹ Back', tut_skip:'Skip / close',
+}};
+function tU(k){ return (S.lang==='en' && UI_STR.en[k]!=null) ? UI_STR.en[k] : null; }
 const RANKS=[[0,'Niyet'],[60,'Tâlib'],[180,'Gayret Ehli'],[360,'İhyâ Yolcusu'],[600,'İhyâ Eri'],[1000,'İhyâ Ustası']];
 function rankIndex(n){ let i=0; for(let k=0;k<RANKS.length;k++){ if(n>=RANKS[k][0]) i=k; } return i; }
-function rankName(n){ return RANKS[rankIndex(n)][1]; }
+function rankName(n){ const i=rankIndex(n); return tU('rank_'+i)||RANKS[i][1]; }
 function addNur(n){ const b=rankIndex(S.nur); S.nur+=n; const a=rankIndex(S.nur);
   if(a>b) setTimeout(()=>{ banner('🌟 Yeni rütbe: '+RANKS[a][1]); sndFanfare(); }, 550); }
 /* ---- İSTİKAMET (streak): ardışık gün günlük ibadeti tamamlama ---- */
@@ -1983,7 +1995,7 @@ function renderMosque(){
       h+='<div class="sub" style="opacity:.85;margin-top:8px;text-align:center">📜 İmam\'ın vazifesi kilitli — 5 vakti <b>üst üste</b> cemaatle kıl<br><b>'+(S.mosqueConsec||0)+'/5 vakit</b> ardışık</div>';
     }
   } else {
-    h+='<div class="sub" style="opacity:.7;margin-top:8px;text-align:center">📜 İmam sana barıştırma · hüküm · emanet vazifelerini verdi ✓</div>';
+    h+='<div class="sub" style="opacity:.7;margin-top:8px;text-align:center">'+(tU('vz_given')||'📜 İmam sana barıştırma · hüküm · emanet vazifelerini verdi ✓')+'</div>';
   }
   // imam ve cemaatle sohbet — 7 gün her vakti camide kılınca açılır
   if(S.mosqueUnlocked){
@@ -1993,7 +2005,7 @@ function renderMosque(){
     const todayN=(S.mosqueVDay===S.dayNum)?S.mosqueVSet.length:0;
     h+='<div class="sub" style="opacity:.8;margin-top:8px;text-align:center">💬 İmam sohbeti kilitli — 7 gün ardışık, her vakti (5) camide kıl<br><b>'+cur+'/7 gün</b> · bugün '+todayN+'/5 vakit</div>';
   }
-  h+='<button class="cl" onclick="__mosqueAct(\'exit\')">🚪 Mescidden çık</button>';
+  h+='<button class="cl" onclick="__mosqueAct(\'exit\')">'+(tU('mosque_exit')||'🚪 Mescidden çık')+'</button>';
   body.innerHTML=h;
   updateMosqueCountdown();   // panel açılınca geri-sayımı hemen doldur
 }
@@ -2665,7 +2677,7 @@ function zulumEvent(total){   // yüksek mutsuzluk → yağma/eşkıya/saldırı
   setTimeout(()=>toast(ev+(loss>0?' (−'+loss+' 💰 dirhem yağmalandı)':'')),300);
   setTimeout(()=>toast('"Zulümden sakının; zulüm kıyamet günü karanlıklardır." (Müslim) — muhtaçları gözet ki şehir huzur bulsun.'),2000);
 }
-function adaletState(){ const t=moodTotal(); return t<=2?{ic:'⚖️',lbl:'Huzur',cls:'ok'}:t<=4?{ic:'😟',lbl:'Huzursuz',cls:'warn'}:{ic:'🗡️',lbl:'Zulüm',cls:'bad'}; }
+function adaletState(){ const t=moodTotal(); return t<=2?{ic:'⚖️',lbl:tU('ad_ok')||'Huzur',cls:'ok'}:t<=4?{ic:'😟',lbl:tU('ad_warn')||'Huzursuz',cls:'warn'}:{ic:'🗡️',lbl:tU('ad_bad')||'Zulüm',cls:'bad'}; }
 function updateAdaletHud(){ const el=document.getElementById('adalet'); if(!el) return;
   const s=adaletState(); el.style.display='flex'; el.className='adalet '+s.cls;   // HEP görünür: şehrin adalet hâli (Huzur→Huzursuz→Zulüm) sürekli okunur, mekanik keşfedilir
   el.innerHTML=emo(s.ic)+' <b>'+s.lbl+'</b>'; }
@@ -3824,19 +3836,31 @@ const TUT_STEPS=[
   {ic:'🕌',t:'İbadet',b:'Vakti gelince <b>🧎 namazını kıl</b>. Cuma günü <b>Mescid</b>\'e git, cemaatle kıl. <b>5 vakti üst üste</b> camide cemaatle kılınca <b>imam sana vazife açar</b> (barıştır·hükmet·emanet).'},
   {ic:'🌍',t:'Amaç: İhyâ',b:'Her adanın derslerini öğren, <b>İmtihan Meydanı</b>\'nda sınavı geç → adayı feth et. Çorak Yesrib\'i yeşil <b>Medine</b>\'ye çevir!'},
 ];
+const TUT_EN=[
+  {ic:'🕹️',t:'Move',b:'Drag the circle at the bottom-left or use <b>WASD</b> to roam Medina. Step next to something and the <b>button at the bottom-right</b> interacts with it.'},
+  {ic:'🌴',t:'Work (honest earning)',b:'<b>Pick fruit</b> from trees, take <b>milk/wool</b> from animals, <b>draw water</b> from the well, <b>reap wheat</b>, <b>catch fish</b> at the pond. A <b>cooldown</b> shows over an emptied one.'},
+  {ic:'🔨',t:'Craft',b:'On the <b>Workshop</b> isle south of the Date Grove, use the mill·oven·loom·cauldron to make flour·bread·buns·prayer rug·satchel·molasses.'},
+  {ic:'🛒',t:'Market',b:'Sell what you gather or craft at the <b>Medina Market</b> (City isle) for <b>dirhams</b>.'},
+  {ic:'🤲',t:'Good & Charity',b:'<b>Give food</b> to those in need (orphan·neighbor·traveler·beggar); turn dirhams into charity via <b>🤲 Good</b> → earn <b>nûr</b>.'},
+  {ic:'🕌',t:'Worship',b:'When the time comes, <b>🧎 pray</b>. On <b>Friday</b> go to the <b>Mosque</b> and pray in congregation. Pray <b>five prayers in a row</b> in congregation and <b>the imam opens duties</b> for you (reconcile·judge·trust).'},
+  {ic:'🌍',t:'Goal: Ihya',b:'Learn each isle\'s lessons, pass the exam at the <b>Trial Grounds</b> → conquer the isle. Turn barren Yathrib into green <b>Medina</b>!'},
+];
+function tutSteps(){ return S.lang==='en' ? TUT_EN : TUT_STEPS; }
 let tutIdx=0;
 function openTut(i){ tutIdx=i||0; document.getElementById('tut').style.display='flex'; renderTut(); }
 function closeTut(){ document.getElementById('tut').style.display='none'; S.tutSeen=true; save(); }
-function renderTut(){ const s=TUT_STEPS[tutIdx];
+function renderTut(){ const TS=tutSteps(); const s=TS[tutIdx];
   document.getElementById('tutIcon').innerHTML=emo(s.ic);
   document.getElementById('tutTitle').textContent=s.t;
   document.getElementById('tutBody').innerHTML=emo(s.b);
-  document.getElementById('tutDots').innerHTML=TUT_STEPS.map((_,i)=>'<span style="width:8px;height:8px;border-radius:50%;background:'+(i===tutIdx?'#2f8f63':'#ffffff30')+'"></span>').join('');
+  document.getElementById('tutDots').innerHTML=TS.map((_,i)=>'<span style="width:8px;height:8px;border-radius:50%;background:'+(i===tutIdx?'#2f8f63':'#ffffff30')+'"></span>').join('');
   document.getElementById('tutPrev').style.visibility=tutIdx>0?'visible':'hidden';
-  document.getElementById('tutNext').textContent=tutIdx<TUT_STEPS.length-1?'İleri ›':'Başla ✓';
+  document.getElementById('tutPrev').textContent=tU('tut_prev')||'‹ Geri';
+  document.getElementById('tutSkip').textContent=tU('tut_skip')||'Atla / kapat';
+  document.getElementById('tutNext').textContent=tutIdx<TS.length-1?(tU('tut_next')||'İleri ›'):(tU('tut_start')||'Başla ✓');
 }
 document.getElementById('tutPrev').onclick=()=>{ if(tutIdx>0){tutIdx--;renderTut();} };
-document.getElementById('tutNext').onclick=()=>{ if(tutIdx<TUT_STEPS.length-1){tutIdx++;renderTut();} else closeTut(); };
+document.getElementById('tutNext').onclick=()=>{ if(tutIdx<tutSteps().length-1){tutIdx++;renderTut();} else closeTut(); };
 document.getElementById('tutSkip').onclick=closeTut;
 document.getElementById('helpBtn').onclick=()=>openTut(0);
 document.getElementById('scenClose').onclick=closeScen;
@@ -3886,10 +3910,10 @@ function renderVazife(){
   const sig=rows.map(r=>r.k+r.cls+(r.n||0)).join('|');
   if(sig===_vzSig && el.style.display!=='none') return;   // değişiklik yoksa DOM'a dokunma
   _vzSig=sig; el.style.display='block';
-  let h='<div class="vzhead" title="Senaryo Defteri\'ni aç">'+emo('📜')+' <span>İmam Vazifelerin</span><span class="chev">›</span></div>';
+  let h='<div class="vzhead" title="Senaryo Defteri\'ni aç">'+emo('📜')+' <span>'+(tU('vz_head')||'İmam Vazifelerin')+'</span><span class="chev">›</span></div>';
   for(const r of rows){ const m=SCEN_META[r.k];
-    const badge = r.cls==='todo' ? '● Bekliyor' : r.cls==='done' ? ('✓ Yapıldı'+(r.n?' ×'+r.n:'')) : '🔒 kilitli';
-    h+='<div class="vzrow '+r.cls+'"><span class="vzic">'+emo(m.ic)+'</span><span class="vznm">'+SCEN_LABEL[r.k]+'</span><span class="vzst">'+badge+'</span></div>';
+    const badge = r.cls==='todo' ? (tU('vz_pending')||'● Bekliyor') : r.cls==='done' ? ((tU('vz_done')||'✓ Yapıldı')+(r.n?' ×'+r.n:'')) : (tU('vz_locked')||'🔒 kilitli');
+    h+='<div class="vzrow '+r.cls+'"><span class="vzic">'+emo(m.ic)+'</span><span class="vznm">'+(tU('vz_'+r.k)||SCEN_LABEL[r.k])+'</span><span class="vzst">'+badge+'</span></div>';
   }
   el.innerHTML=h;
 }
@@ -3898,7 +3922,7 @@ function refreshHUD(){
   const rk=document.getElementById('rank'); if(rk) rk.textContent=rankName(S.nur);
   const total=WORLD.islands.filter(i=>!i.side).length, done=WORLD.islands.filter(i=>!i.side&&S.conquered[i.id]).length;
   const pg=document.getElementById('prog'); if(pg) pg.style.width=(done/total*100)+'%';
-  document.getElementById('cntPill').textContent=done+'/'+total+' ada';
+  document.getElementById('cntPill').textContent=done+'/'+total+' '+(tU('isles')||'ada');
   const sp=document.getElementById('streakPill');
   if(sp){ if(S.streak>0){ sp.style.display='flex'; sp.innerHTML='🔥 <b>'+S.streak+'</b>'; } else sp.style.display='none'; }
   if(typeof updateWoolHint==='function') updateWoolHint();
@@ -4219,6 +4243,8 @@ function applyLang(){ const L=(S.lang&&I18N[S.lang])?S.lang:'tr';
   try{ document.documentElement.lang=L; document.documentElement.dir=(L==='ar'?'rtl':'ltr'); }catch(e){}
   const set=(id,k)=>{ const e=document.getElementById(id); if(e) e.textContent=tI(k); };
   set('introCtrlTxt','controls'); set('introOr','or'); set('introPick','pick');
+  if(typeof refreshHUD==='function'){ try{ refreshHUD(); }catch(e){} }   // rütbe/adalet/ada/vazife dil ile güncellensin
+  try{ if(document.getElementById('tut').style.display==='flex') renderTut(); }catch(e){}
 }
 let introMode=false, introT=0, introLit=false, cineStart=0;
 function startIntro(){
