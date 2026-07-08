@@ -413,7 +413,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.10</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.11</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -1229,6 +1229,11 @@ const UI_STR={ en:{
   hd_map:'🗺️ Map of Medina', map_sub:'Turn Yathrib into Medina: conquer each isle. 📍 active · ✓ conquered · 🔒 locked.',
   map_locked:'Locked', map_locked_d:'Conquer the previous isle', map_open:'Open', map_atolye:'Mill · oven · loom', map_sadaka:'Ongoing-charity works',
   map_done:'Conquered', map_active_task:'📍 Active task/case', map_peaceful:'Peaceful', map_active:'Active', map_lessons:'lessons', map_exam_ready:'Ready for the trial 📝', map_explore:'Explore',
+  // --- Sadaka bahçesi genişletme ---
+  gd_title:'New Charity Garden', gd_works:' works', gd_full:'Gardens are full — expand so your works fit', gd_room:'When works multiply, a new isle is needed',
+  gd_all:'All garden isles owned ✓', gd_maxed:'✓ All garden isles owned', gd_poor:'🔒 Not enough dirhams — need: ',
+  gd_banner:'🏝️ New Charity Garden acquired', gd_toast:'A new garden opened for your charitable works: ', gd_full_hint:'🏝️ Gardens are full — buy a new Charity Garden below',
+  hy_maxed:'✓ You reached the maximum for this charity', hy_poor_a:'Not enough dirhams — ', hy_poor_b:' needed (sell goods at the market)',
 },
 // ===== AR — Arapça (Faz 1: kabuk + dünya-içi etkileşim). Dinî içerik (QUEST/QBANK/diyalog) sonraki AR fazlarında; şimdilik TR'ye düşer. =====
 ar:{
@@ -1288,6 +1293,10 @@ ar:{
   hd_map:'🗺️ خريطة المدينة', map_sub:'حوّل يثرب إلى المدينة: افتح كل جزيرة. 📍 نشطة · ✓ مفتوحة · 🔒 مقفلة.',
   map_locked:'مقفلة', map_locked_d:'افتح الجزيرة السابقة', map_open:'مفتوحة', map_atolye:'رحى · تنّور · نَول', map_sadaka:'أعمال الصدقة الجارية',
   map_done:'مفتوحة', map_active_task:'📍 مهمّة/قضية نشطة', map_peaceful:'هادئة', map_active:'نشطة', map_lessons:'دروس', map_exam_ready:'جاهز للامتحان 📝', map_explore:'استكشف',
+  gd_title:'بستان صدقة جديد', gd_works:' أعمال', gd_full:'امتلأت البساتين — وسّع لتتّسع أعمالك', gd_room:'عند تكاثر الأعمال تحتاج جزيرة جديدة',
+  gd_all:'امتلكتَ كل جزر البساتين ✓', gd_maxed:'✓ امتلكتَ كل جزر البساتين', gd_poor:'🔒 لا دراهم كافية — المطلوب: ',
+  gd_banner:'🏝️ تم شراء بستان صدقة جديد', gd_toast:'فُتح بستان جديد لأعمال صدقتك: ', gd_full_hint:'🏝️ امتلأت البساتين — اشترِ بستان صدقة جديدًا أدناه',
+  hy_maxed:'✓ بلغتَ الحدّ الأقصى لهذا الخير', hy_poor_a:'لا دراهم كافية — ', hy_poor_b:' مطلوب (بِع في السوق)',
 }};
 function hayirNm(h){ return tU('hy_'+h.id) || (h && h.nm) || ''; }   // hayır kalemi adı (dil)
 // EN İ18N — Hayır kalemi ref hadîsleri (Faz 3; TERCUME_SOZLUGU.md)
@@ -1541,6 +1550,9 @@ const WORLD={
     {id:'atolye',  name:'Atölye',          c:[16.5,-14], r:6.0, side:true, link:'bahce'},
     // SADAKA BAHÇESİ — Hâne'nin önünde (kuzey/-z, görünür), sadaka-i câriye eserleri sergisi (side, ev'e bağlı; ev hep açık)
     {id:'sadaka',  name:'Sadaka Bahçesi',  c:[0,-15], r:6.0, side:true, link:'ev'},
+    // GENİŞLETME BAHÇELERİ — sadaka eserleri taşınca dirhemle satın alınır (garden:true, tier). Satın alınana dek GİZLİ.
+    {id:'sadaka2', name:'Sadaka Bahçesi II',  c:[-15,-15], r:6.0, side:true, link:'ev', garden:true, tier:1},
+    {id:'sadaka3', name:'Sadaka Bahçesi III', c:[-30,-15], r:6.0, side:true, link:'ev', garden:true, tier:2},
   ],
   bridges:[]
 };
@@ -1554,6 +1566,15 @@ for(let i=0;i<WORLD.islands.length-1;i++){
 WORLD.bridges.push({ a:[16.5,-6.3], b:[16.5,-8.7], w:2.0, isl:['bahce','atolye'] });
 // Sadaka Bahçesi yan köprüsü: Hâne kuzeyi ↔ Sadaka güneyi
 WORLD.bridges.push({ a:[0,-7.3], b:[0,-9.3], w:2.0, isl:['ev','sadaka'] });
+// Genişletme bahçe köprüleri (batıya zincir; satın alınınca açılır/görünür)
+WORLD.bridges.push({ a:[-6.3,-15], b:[-8.7,-15], w:2.0, isl:['sadaka','sadaka2'], garden:true });
+WORLD.bridges.push({ a:[-21.3,-15], b:[-23.7,-15], w:2.0, isl:['sadaka2','sadaka3'], garden:true });
+const SADAKA_CAP=12, MAX_GARDEN_BUY=2;   // her bahçe adası ~12 eser; en çok 2 ek ada
+function sadakaCost(){ return 200*Math.pow(2,(S.sadakaBought||0)); }   // 200, 400 (diğer hayırlardan çok pahalı)
+function gardenIslands(){ const g=['sadaka']; if((S.sadakaBought||0)>=1) g.push('sadaka2'); if((S.sadakaBought||0)>=2) g.push('sadaka3'); return g; }
+function worksInGarden(id){ const is=WORLD.islands.find(i=>i.id===id); if(!is) return 0; let n=0;
+  for(const h of HAYIR) for(const p of (S.hayir[h.id]||[])) if(inSq(p.x,p.z,is.c,is.r)) n++; return n; }
+function gardensFull(){ return gardenIslands().every(id=>worksInGarden(id)>=SADAKA_CAP); }
 const grassMat=new THREE.MeshStandardMaterial({color:0x8fce58,roughness:.95});
 const cliffMat=new THREE.MeshStandardMaterial({color:0xcf9a72,roughness:1});
 const GRASS0=new THREE.Color(0x8fce58), CLIFF0=new THREE.Color(0xcf9a72);
@@ -1567,6 +1588,7 @@ function questIslandId(q){ return islandOf(q.pos[0],q.pos[2]); }
 function islandQuests(id){ return allQuests().filter(q=>questIslandId(q)===id); }
 function islandDone(id){ const qs=islandQuests(id); return qs.length>0 && qs.every(q=>!!S.done[q.id]); }
 function isUnlocked(id){ const i=WORLD.islands.findIndex(o=>o.id===id); const isl=WORLD.islands[i];
+  if(isl && isl.garden) return (S.sadakaBought||0) >= isl.tier;   // genişletme bahçesi: satın alınmışsa açık
   if(isl && isl.side) return isUnlocked(isl.link||WORLD.islands[0].id);   // yan ada: bağlı ana ada açıksa açık
   if(i<=0) return true; return !!S.conquered[WORLD.islands[i-1].id]; }
 // eski kayıt göçü: bugün tamamlanmış adaları kalıcı fethe işle
@@ -1662,10 +1684,10 @@ function buildIslands(){
       const edge=Math.max(0, Math.min(1, (R-Math.max(Math.abs(lx),Math.abs(ly)))/1.6));   // kenarda 0, içeride 1
       gp.setZ(vi, terrainH(wx,wz)*edge); }
     gGeo.computeVertexNormals();
-    const top=new THREE.Mesh(gGeo,is.gMat); top.rotation.x=-Math.PI/2; top.position.set(is.c[0],0,is.c[1]); top.frustumCulled=false; scene.add(top);
+    const top=new THREE.Mesh(gGeo,is.gMat); top.rotation.x=-Math.PI/2; top.position.set(is.c[0],0,is.c[1]); top.frustumCulled=false; scene.add(top); is.topMesh=top;
     // KARE toprak gövde (hafif konik): 4-kenar prizma, PI/4 döndürülür → yüzler eksene hizalı (çimle aynı kare)
     const cliff=new THREE.Mesh(new THREE.CylinderGeometry(R*1.386,R*1.103,2.6,4),is.cMat);
-    cliff.rotation.y=Math.PI/4; cliff.position.set(is.c[0],-1.3,is.c[1]); cliff.frustumCulled=false; scene.add(cliff);   // üst y≈0, alt y=-2.6
+    cliff.rotation.y=Math.PI/4; cliff.position.set(is.c[0],-1.3,is.c[1]); cliff.frustumCulled=false; scene.add(cliff); is.cliffMesh=cliff;   // üst y≈0, alt y=-2.6
     // frustumCulled=false ŞART: hayvanlar (frustumCulled=false) hep çizilir; ada zemini culle atılırsa
     // kenar adanın devesi/koyunu "suyun üstünde uçuyor/off-grid" görünür (asıl teleport gizemi buydu)
     decorateIsland(is);
@@ -3090,8 +3112,7 @@ const HAYIR=[
 for(const h of HAYIR) if(!S.hayir[h.id]) S.hayir[h.id]=[];   // eski kayıtlara yeni hayır kalemleri için boş dizi
 let hayirGroups=[], lanternCores=[];
 // Bağışlanan hayır eserleri ARTIK Sadaka Bahçesi adasına konur (Hâne önü) — haritanın her yerine dağılmaz.
-function randomHayirSpot(){
-  const is=WORLD.islands.find(i=>i.id==='sadaka')||WORLD.islands[0];
+function spotInGarden(is){
   const entZ=is.c[1]+is.r-0.5;   // kuzey köprü girişi — kapama
   for(let k=0;k<14;k++){
     const a=Math.random()*6.283, r=is.r*(0.5+Math.random()*0.38);   // dış halka (merkez sergiyi boş bırak)
@@ -3100,6 +3121,13 @@ function randomHayirSpot(){
     return { x:+x.toFixed(2), z:+z.toFixed(2) };
   }
   return { x:+(is.c[0]-2.5).toFixed(2), z:+(is.c[1]-2).toFixed(2) };   // yedek: güney-batı
+}
+function randomHayirSpot(){
+  const owned=gardenIslands();
+  for(const gid of owned){ const is=WORLD.islands.find(i=>i.id===gid);
+    if(is && worksInGarden(gid) < SADAKA_CAP) return spotInGarden(is); }   // dolmayan ilk bahçe
+  const last=WORLD.islands.find(i=>i.id===owned[owned.length-1]);   // hepsi doluysa son bahçeye sıkıştır (asla null dönme)
+  return spotInGarden(last||WORLD.islands.find(i=>i.id==='sadaka')||WORLD.islands[0]);
 }
 // eski bağış eserlerini (haritaya dağılmış) Sadaka adasına TAŞI — bir kez
 if(!S.hayirMigrated){
@@ -3144,14 +3172,31 @@ function applyHayir(){
 }
 function donateHayir(id){
   const def=HAYIR.find(h=>h.id===id); const arr=S.hayir[id];
-  if(arr.length>=def.max){ toast('✓ Bu hayırda azami sayıya ulaştın'); return; }
-  if((S.dirhem||0)<def.cost){ toast('🔒 Yetersiz dirhem — '+def.cost+' gerekli (pazarda mal sat)'); return; }
+  if(arr.length>=def.max){ toast(tU('hy_maxed')||'✓ Bu hayırda azami sayıya ulaştın'); return; }
+  if(gardensFull() && (S.sadakaBought||0)<MAX_GARDEN_BUY){ toast(tU('gd_full_hint')||'🏝️ Bahçeler doldu — aşağıdan yeni bir Sadaka Bahçesi al'); renderHayir(); return; }
+  if((S.dirhem||0)<def.cost){ toast('🔒 '+(tU('hy_poor_a')||'Yetersiz dirhem — ')+def.cost+(tU('hy_poor_b')||' gerekli (pazarda mal sat)')); return; }
   S.dirhem-=def.cost; addNur(def.reward); const p=randomHayirSpot(); arr.push(p); addHayirMesh(id,p);
   careAllNeedy();   // sadaka-i câriye topluma yayılır → tüm muhtaçları gözetir
   if((id==='sebil'||id==='golge') && !S.done['hayir']){   // faydalı iş senaryosu: sebil/gölgelik inşası "hayir" quest'ini tamamlar
     S.done['hayir']=true; const r=scenarioRecs.find(x=>x.sid==='faydali'); if(r) r.done=true; applyIslandLock(); }
   save(); refreshHUD(); renderHayir();
   sndChime(); banner(def.ic+(tU('hy_banner_suf')||' Sadaka-i câriye')); toast('🤲 '+hayirNm(def)+(tU('hy_toast_a')||' — kabul olsun (+')+def.reward+(tU('nur_suffix')||' nûr')+')');
+}
+// genişletme bahçelerini satın-alma durumuna göre göster/gizle (tile + gövde + sis + süs + köprü)
+function refreshGardenViz(){
+  for(const is of WORLD.islands){ if(!is.garden) continue; const vis=isUnlocked(is.id);
+    if(is.topMesh) is.topMesh.visible=vis; if(is.cliffMesh) is.cliffMesh.visible=vis; if(is.mist) is.mist.visible=vis;
+    if(is.deco) for(const d of is.deco){ if(d&&d.m) d.m.visible=vis; }
+  }
+  for(const b of WORLD.bridges){ if(!b.garden) continue; if(b.grp) b.grp.visible=bridgeOpen(b); }
+}
+function buyGarden(){
+  if((S.sadakaBought||0)>=MAX_GARDEN_BUY){ toast(tU('gd_maxed')||'✓ Tüm bahçe adaları alındı'); return; }
+  const cost=sadakaCost(); if((S.dirhem||0)<cost){ toast((tU('gd_poor')||'🔒 Yeterli dirhem yok — gerekli: ')+cost+' 💰'); return; }
+  S.dirhem-=cost; S.sadakaBought=(S.sadakaBought||0)+1; save(); refreshHUD(); refreshGardenViz(); renderHayir(); sndFanfare();
+  const is=WORLD.islands.find(i=>i.garden&&i.tier===S.sadakaBought);
+  banner(tU('gd_banner')||'🏝️ Yeni Sadaka Bahçesi alındı');
+  setTimeout(()=>toast((tU('gd_toast')||'Sadaka eserlerin için yeni bir bahçe açıldı: ')+(is?islandName(is):'')),300);
 }
 /* ============ MEDİNE ADALETİ — muhtaç ihmali → mutsuzluk → şehir huzursuzluğu/zulüm ============ */
 // Zekât/sadaka/hayrın düştüğü muhtaçlar. Haftalık gözetilmezlerse mutsuzlaşır; mutsuzluk
@@ -3224,8 +3269,9 @@ function renderMap(){
     if(idx<mains.length-1){ const br=document.createElement('div'); br.className='mapbridge'+(conq?' open':''); chain.appendChild(br); }
   });
   w.appendChild(chain);
-  // detay liste (yan adalar dahil)
+  // detay liste (yan adalar dahil; satın alınmamış genişletme bahçelerini gösterme)
   for(const is of WORLD.islands){
+    if(is.garden && !isUnlocked(is.id)) continue;
     const unlocked=isUnlocked(is.id), conq=!!S.conquered[is.id], side=!!is.side;
     const qs=islandQuests(is.id), qdone=qs.filter(q=>S.done[q.id]).length, active=hasActiveQuest(is.id);
     let badge, detail, dotCls;
@@ -3274,6 +3320,16 @@ function renderHayir(){
     if(!maxed) btn.onclick=()=>donateHayir(h.id);
     w.appendChild(card);
   }
+  // GENİŞLETME — sadaka eserleri çoğalınca yeni bahçe adası (diğer hayırlardan pahalı)
+  { const bought=S.sadakaBought||0, works=HAYIR.reduce((s,h)=>s+((S.hayir[h.id]||[]).length),0), cap=SADAKA_CAP*gardenIslands().length;
+    const d=document.createElement('div'); d.className='hcard'; d.style.borderColor='#e0a63a55';
+    if(bought<MAX_GARDEN_BUY){ const cost=sadakaCost(), poor=(S.dirhem||0)<cost, full=gardensFull();
+      d.innerHTML='<div class="hic">🏝️</div><div class="hbody"><div class="hnm">'+(tU('gd_title')||'Yeni Sadaka Bahçesi')+' <span class="hcnt">'+works+'/'+cap+(tU('gd_works')||' eser')+'</span></div><div class="href">'+(full?(tU('gd_full')||'Bahçeler doldu — genişlet ki eserlerin sığsın'):(tU('gd_room')||'Eserler çoğalınca yeni ada gerekir'))+'</div></div><button class="hbuy'+(poor?' off':'')+'">💰 '+cost+'</button>';
+      const gb=d.querySelector('.hbuy'); if(!poor) gb.onclick=()=>buyGarden();
+    } else {
+      d.innerHTML='<div class="hic">🏝️</div><div class="hbody"><div class="hnm">'+(tU('gd_title')||'Sadaka Bahçeleri')+' <span class="hcnt">'+works+'/'+cap+(tU('gd_works')||' eser')+'</span></div><div class="href">'+(tU('gd_all')||'Tüm bahçe adaları alındı ✓')+'</div></div>';
+    }
+    w.appendChild(d); }
 }
 /* ---- DAĞARCIK (envanter) ---- */
 function openInv(){ renderInv(); document.getElementById('inv').classList.add('show'); }
@@ -3926,7 +3982,7 @@ function buildWorld(){
     br.position.set((ax+bx)/2,-0.45,(az+bz)/2);
     br.rotation.y=Math.atan2(-(bz-az),(bx-ax));
     br.scale.set(Math.max(1.15,(len+1.7)/2.1), 1.15, 1.2);
-    scene.add(br); b.deco=inst.meshes;
+    scene.add(br); b.deco=inst.meshes; b.grp=br;
   }
   // Cami adasında MESCİD-İ NEBEVÎ (kerpiç + hurma direkleri; jenerik camiyle değişti)
   const mq=instance('mosque'); mq.g.position.set(49,0,-4.4); mq.g.rotation.y=0; mq.g.scale.setScalar(1.6); scene.add(mq.g);   // jenerik mescid (Mescid sonra)
@@ -3946,6 +4002,7 @@ function buildWorld(){
   buildIlimMeclisi();      // Cami adasında Suffa: 6 sahabe çember + gölgelik (ilim düğümü merkezde)
   buildAtolye();           // Atölye adası: değirmen/tandır/tezgâh craft istasyonları
   buildSadakaGarden();     // Sadaka Bahçesi adası: her hayır kaleminden birer sergi (Hâne önü)
+  refreshGardenViz();      // genişletme bahçelerini (satın alınmamış) gizle
   buildBees();             // çiçeklerin etrafında dolaşan minik arılar (ambient)
   // ağaç süsleri (adaların kenarlarında, z ~ ±4-5; görev/yol hattından uzak)
   for(const [x,z,s] of [[-5,4,1.1],[5,-4,1.0],[-6,-3,1.1],
@@ -4966,6 +5023,10 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
     openScen:()=>openScen(), scenState:()=>({xp:scenXP(), baris:scenOf('baris'), adalet:scenOf('adalet'), emanet:scenOf('emanet'), titles:{baris:scenTitle('baris'), adalet:scenTitle('adalet'), emanet:scenTitle('emanet')}}),
     openScenSid:(sid)=>{ const r=scenarioRecs.find(x=>x.sid===sid); if(r) doScenario(r); return !!r; },   // senaryo diyaloğunu tetikle (test)
     openMap:()=>openMap(),
+    buyGarden:()=>buyGarden(), refreshGardenViz:()=>refreshGardenViz(),
+    gardenState:()=>({bought:S.sadakaBought||0, cost:sadakaCost(), works:HAYIR.reduce((s,h)=>s+((S.hayir[h.id]||[]).length),0), cap:SADAKA_CAP*gardenIslands().length, full:gardensFull(), perGarden:gardenIslands().map(g=>({g,n:worksInGarden(g)})),
+      viz:WORLD.islands.filter(i=>i.garden).map(i=>({id:i.id, unlocked:isUnlocked(i.id), topVis:i.topMesh?i.topMesh.visible:null}))}),
+    setBought:(n)=>{ S.sadakaBought=n; refreshGardenViz(); },   // test (save YOK)
     hayirCounts:()=>({agac:S.hayir.agac.length,kandil:S.hayir.kandil.length,cesme:S.hayir.cesme.length,ilim:S.hayir.ilim.length}),
     openInv:()=>openInv(), inv:()=>Object.assign({},S.inv),
     gatherNodes:()=>gatherNodes.map(r=>({id:r.def.id, ready:nodeReady(r.def), bareNow:r.bareNow, item:r.def.item})),
