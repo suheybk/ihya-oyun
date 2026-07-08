@@ -139,6 +139,27 @@ Kur'ân mushaf lafzı + muteber hadîs Arapça metnidir** (çeviri değil). Kita
 | Şahitsiz (yazılmamış) borç | «Belli süreye borçlandığınızda onu yazın… iki şahit tutun.» (Bakara 2/282) | «Beyyine davacıya, yemin inkâr edene düşer.» (Beyhakî) |
 | Sözünden dönme (ahde vefa) | «Akitlerinizi (sözlerinizi) yerine getirin.» (Mâide 5/1) | «Münafığın alâmeti üçtür: …söz verince döner.» (Buhârî) |
 
+### 4c) Emanet (Emanet Ulaştırma) — yeni 10 vaka (Faz 6.22)
+
+Emanet senaryosu da **3 → 13 vakaya** çıkarıldı; her vakaya **kendi kaynağı** eklendi (önceden tek sabit ref vardı).
+Diyalog artık `c.ref` (vakaya özel) gösterir.
+
+| Vaka (emanet türü) | Âyet | Hadîs |
+|---|---|---|
+| Komşu kesesi → kardeş | «Emanetleri ehline verin.» (Nisâ 4/58) | «Sana emânet edene öde, hıyanet edene hıyanet etme.» (Ebû Dâvûd; Tirmizî) |
+| Dul bohçası → akraba | «Emanetleri ehline verin.» (Nisâ 4/58) | «Emaneti olmayanın imanı yoktur, ahdi olmayanın dini yoktur.» (Ahmed) |
+| Yetim mirası → vasî | «Yetim malını haksız yiyenler karınlarına ateş doldururlar.» (Nisâ 4/10) · «Yetim malına en güzel şekilde yaklaşın.» (En'âm 6/152) | — |
+| Ariyet (ödünç kap) iade | «Emanetleri ehline verin.» (Nisâ 4/58) | «Ariyet (ödünç) geri verilir, borç ödenir.» (Ebû Dâvûd; Tirmizî) |
+| Mühürlü vedia | «…emanet ve ahitlerini gözetenler.» (Mü'minûn 23/8) | «Sana emânet edene öde…» (Ebû Dâvûd; Tirmizî) |
+| Buluntu (lukata) kese | — | «Bir yıl ilan et; sahibi kabını/bağını söylerse ver.» (Buhârî; Müslim) |
+| Zekât kesesi → fakir | «Sadakalar ancak fakirler, düşkünler… içindir.» (Tevbe 9/60) | «(Zekât) zenginlerinden alınır, fakirlerine verilir.» (Buhârî) |
+| Borç ödemesi → alacaklı | — | «Zenginin borcunu geciktirmesi zulümdür.» (Buhârî) · «Hayırlınız borcunu en güzel ödeyendir.» (Buhârî) |
+| Yetim nafakası → hoca | «Yetim malına, rüşdüne erene dek en güzel şekilde yaklaşın.» (İsrâ 17/34) | — |
+| Satış bedeli → ortak | «Ölçü ve tartıyı adaletle tam yapın.» (En'âm 6/152) | «Doğru, güvenilir tüccar peygamberlerle beraberdir.» (Tirmizî) |
+| Mushaf → talebe (ilim) | — | «Benden bir âyet de olsa ulaştırın.» (Buhârî) · «En hayırlınız Kur'ân'ı öğrenen ve öğretendir.» (Buhârî) |
+| Muhtaç yardımı → dul | — | «Dul ve yoksula koşan, Allah yolunda cihad eden gibidir.» (Buhârî; Müslim) |
+| Vasiyet → oğul | «…ölüm gelip mal bırakacaksa vasiyet etmesi farz kılındı.» (Bakara 2/180) | «Vasiyet edeceği olanın, vasiyeti yazılı olmadan iki gece geçirmesi doğru değildir.» (Buhârî; Müslim) |
+
 ---
 
 ## 5) Metodoloji & Uyarılar
