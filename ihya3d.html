@@ -1046,6 +1046,29 @@ const UI_STR={ en:{
   g_step:'Step ', g_next:'Next ▶', g_learned:'Learned ✓', g_learned_suf:' — learned',
   q_undo10:'↺ Undone (−10 nur)', q_plus10:'+10 nur ✦',
   q_exam_open_a:'📝 ', q_exam_open_b:' Trial Grounds opened!', q_exam_ready:'📝 You\'re ready for the trial',
+  // --- Faz 3: senaryo diyalog çerçevesi ---
+  t_locked_medina:'🔒 Medina isn\'t open yet',
+  db_title:'Make Peace', db_s0opt:'«Let me first listen to you both calmly.»', db_s1who:'Both sides',
+  db_s1a:'<b>One:</b> «', db_s1b:'»\n<b>The other:</b> «', db_s1end:'»',
+  db_s2who:'Time for reconciliation', db_s2txt:'Both fell silent, heads bowed. Now is the time to <b>make peace</b> between them — reconciliation reunites scattered hearts.',
+  db_reconcile:'🕊️ Reconcile — shake hands', db_notnow:'Not now',
+  db_solve_banner:'🕊️ +20 nur — You made peace', db_notyet:'🕊️ Everyone is at peace for now — a new dispute may arise shortly.',
+  da_title:'The Judge — Rule with Justice', da_s0opt:'«What is your proof? Bring evidence.»', da_s1who:'Evidence', da_s2who:'Verdict',
+  da_swwho:'Warning', da_swtxt:'Judgment follows the evidence; taking sides is injustice — reconsider.', da_swopt:'Rule again',
+  da_solve_banner:'⚖️ +22 nur — You judged with justice', da_notyet:'⚖️ No new case for now — a new matter will come to the council shortly.',
+  de_title:'Deliver the Trust', de_s0who:'Neighbor',
+  de_s0ref:'<b>Verse:</b> «Allah commands you to render trusts to their rightful owners.» (An-Nisa 4/58)<br><b>Hadith:</b> «There is no faith for the one who has no trustworthiness.» (Ahmad)',
+  de_take:'📿 Take the trust, give your word', de_took_banner:'📿 You took the trust',
+  de_deliver_title:'The Trust\'s Owner', de_deliver:'📿 Deliver the trust',
+  de_solve_banner:'📿 +22 nur — The trust reached its owner', de_solve_toast:'You gave the trust to its owner; you kept your word — trustworthiness is a mark of faith.',
+  de_carrying:'📿 You are still carrying the trust — take it to its owner at the Mosque.', de_notyet:'📿 No new trust for now — a neighbor may entrust you again shortly.',
+  de_takefirst:'📿 First take the trust from the neighbor in Medina.',
+  dl_title:'A Person in Need', dl_dirhem:'💰 Give a handful of dirhams (3)', dl_food:'🌴 Give some food',
+  dl_nodirhem:'🔒 Not enough dirhams (need 3) — sell goods at the market.', dl_nofood:'🔒 No food — gather dates/mulberries/milk.',
+  dl_banner:'🤲 Secret charity', dl_toast:'Let your left hand not know what your right gives — you did not turn away a person in need.',
+  dl_justgave:'🤲 You just gave — try again shortly.',
+  sc_title_a:'🏅 Title: ', sc_title_toast_a:'🏅 ', sc_title_toast_b:' title: «', sc_title_toast_c:'» — +', sc_title_toast_d:' nur',
+  sc_ledger_a:'📖 ', sc_ledger_b:' ledger: case #', sc_ledger_c:' solved',
 }};
 function hayirNm(h){ return tU('hy_'+h.id) || (h && h.nm) || ''; }   // hayır kalemi adı (dil)
 // Faz 2b: senaryo unvanları — Türkçe başlık → İngilizce
@@ -3323,8 +3346,8 @@ function scenSolve(key,rec,nur,bannerTxt,toastTxt){
   if(firstEver) applyIslandLock();   // ilk kez → ada görsel kilidi
   st.n++; st.idx=(st.idx+1)%(SCEN_POOL[key]||1); st.cd=Date.now()+SCEN_CD; save(); refreshHUD();
   const hit=(SCEN_TITLES[key]||[]).find(t=>t.n===st.n);   // bu mesele bir kilometre taşı mı?
-  if(hit){ const bonus=15+st.n; setTimeout(()=>{ banner('🏅 Unvan: '+hit.t); sndFanfare(); addNur(bonus); toast('🏅 '+SCEN_LABEL[key]+' unvanı: «'+hit.t+'» — +'+bonus+' nûr'); },3300); }
-  else setTimeout(()=>toast('📖 '+SCEN_LABEL[key]+' defteri: '+st.n+'. mesele çözüldü'),2500);
+  if(hit){ const bonus=15+st.n; setTimeout(()=>{ banner((tU('sc_title_a')||'🏅 Unvan: ')+scenTName(hit.t)); sndFanfare(); addNur(bonus); toast((tU('sc_title_toast_a')||'🏅 ')+scenLabelNm(key)+(tU('sc_title_toast_b')||' unvanı: «')+scenTName(hit.t)+(tU('sc_title_toast_c')||'» — +')+bonus+(tU('sc_title_toast_d')||' nûr')); },3300); }
+  else setTimeout(()=>toast((tU('sc_ledger_a')||'📖 ')+scenLabelNm(key)+(tU('sc_ledger_b')||' defteri: ')+st.n+(tU('sc_ledger_c')||'. mesele çözüldü')),2500);
 }
 // renewable senaryoda yeni vaka hazır mı? (buton etiketi + handler kapısı). renew yoksa eski davranış.
 function scenArmed(rec){ const k=rec.renew; if(!k) return !(rec.q && S.done[rec.q.id]);
@@ -3349,14 +3372,14 @@ const SULH_CASES=[
     ref:'<b>Âyet:</b> «Ölçtüğünüzde tam ölçün, doğru terazi ile tartın.» (İsrâ 17/35)<br><b>Hadis:</b> «Bizi aldatan bizden değildir.» (Müslim)',
     done:'Satıcı ölçüyü düzeltti, alıcı gönül aldı; pazarda huzur döndü.' },
 ];
-function dlgBaris(){ const c=SULH_CASES[scenOf('baris').idx]; return { ic:'🕊️', title:'Aralarını Bul', start:'s0', steps:{
-  s0:{who:c.who, txt:c.s0, opts:[{l:'«Önce ikinizi de sâkince dinleyeyim.»', go:'s1'}]},
-  s1:{who:'İki taraf', txt:'<b>Biri:</b> «'+c.a+'»\n<b>Öteki:</b> «'+c.b+'»', opts:[{l:c.t1, go:'s2'},{l:c.t2, go:'s2'}]},
-  s2:{who:'Sulh vakti', txt:'İkisi de sustu, başları önüne düştü. Şimdi <b>aralarını bulma</b> vakti — sulh, dağılan kalpleri birleştirir.', ref:c.ref, opts:[
-    {l:'🕊️ Barıştır — el sıkıştır', act:()=>{ const r=scenarioRecs.find(x=>x.sid==='baris'); scenSolve('baris',r,20,'🕊️ +20 nûr — Aralarını buldun',c.done); careAllNeedy(); }},
-    {l:'Şimdi olmaz'} ]},
+function dlgBaris(){ const c=scenCase(SULH_CASES,SULH_CASES_EN,scenOf('baris').idx); return { ic:'🕊️', title:tU('db_title')||'Aralarını Bul', start:'s0', steps:{
+  s0:{who:c.who, txt:c.s0, opts:[{l:tU('db_s0opt')||'«Önce ikinizi de sâkince dinleyeyim.»', go:'s1'}]},
+  s1:{who:tU('db_s1who')||'İki taraf', txt:(tU('db_s1a')||'<b>Biri:</b> «')+c.a+(tU('db_s1b')||'»\n<b>Öteki:</b> «')+c.b+(tU('db_s1end')||'»'), opts:[{l:c.t1, go:'s2'},{l:c.t2, go:'s2'}]},
+  s2:{who:tU('db_s2who')||'Sulh vakti', txt:tU('db_s2txt')||'İkisi de sustu, başları önüne düştü. Şimdi <b>aralarını bulma</b> vakti — sulh, dağılan kalpleri birleştirir.', ref:c.ref, opts:[
+    {l:tU('db_reconcile')||'🕊️ Barıştır — el sıkıştır', act:()=>{ const r=scenarioRecs.find(x=>x.sid==='baris'); scenSolve('baris',r,20,tU('db_solve_banner')||'🕊️ +20 nûr — Aralarını buldun',c.done); careAllNeedy(); }},
+    {l:tU('db_notnow')||'Şimdi olmaz'} ]},
 }}; }
-SCENE_DO['baris']=(rec)=>{ if(!scenArmed(rec)){ toast('🕊️ Şimdilik herkes barış içinde — biraz sonra yeni bir dargınlık çıkabilir.'); return; } openDialog(dlgBaris()); };
+SCENE_DO['baris']=(rec)=>{ if(!scenArmed(rec)){ toast(tU('db_notyet')||'🕊️ Şimdilik herkes barış içinde — biraz sonra yeni bir dargınlık çıkabilir.'); return; } openDialog(dlgBaris()); };
 // --- 2) KADI — ADALET — adalet quest, Medine — 3 vaka havuzu ---
 const ADALET_CASES=[
   { who:'Deve davası', s0:'Meclise iki kişi geldi: <b>zengin bir tüccar</b> ile <b>fakir bir çoban</b>, aynı <b>deveyi</b> sahipleniyor.\n\n— «Ey hakem, bu deve benimdir!» diyor ikisi de.',
@@ -3378,15 +3401,15 @@ const ADALET_CASES=[
     ref:'<b>Hadis:</b> «İşçiye ücretini, teri kurumadan verin.» (İbn Mâce)<br><b>Âyet:</b> «...hükmettiğinizde adaletle hükmedin.» (Nisâ 4/58)',
     done:'İşçinin hakkını teri kurumadan ödettin; emeğe saygı adalettir.' },
 ];
-function dlgAdalet(){ const c=ADALET_CASES[scenOf('adalet').idx]; return { ic:'⚖️', title:'Kadı — Adaletle Hükmet', start:'s0', steps:{
-  s0:{who:c.who, txt:c.s0, opts:[{l:'«Deliliniz nedir? Beyyine getirin.»', go:'s1'}]},
-  s1:{who:'Deliller', txt:c.ev, opts:[{l:c.check, go:'s2'}]},
-  s2:{who:'Karar', txt:c.verdict, ref:c.ref, opts:[
-    {l:c.right, act:()=>{ const r=scenarioRecs.find(x=>x.sid==='adalet'); scenSolve('adalet',r,22,'⚖️ +22 nûr — Adaletle hükmettin',c.done); }},
+function dlgAdalet(){ const c=scenCase(ADALET_CASES,ADALET_CASES_EN,scenOf('adalet').idx); return { ic:'⚖️', title:tU('da_title')||'Kadı — Adaletle Hükmet', start:'s0', steps:{
+  s0:{who:c.who, txt:c.s0, opts:[{l:tU('da_s0opt')||'«Deliliniz nedir? Beyyine getirin.»', go:'s1'}]},
+  s1:{who:tU('da_s1who')||'Deliller', txt:c.ev, opts:[{l:c.check, go:'s2'}]},
+  s2:{who:tU('da_s2who')||'Karar', txt:c.verdict, ref:c.ref, opts:[
+    {l:c.right, act:()=>{ const r=scenarioRecs.find(x=>x.sid==='adalet'); scenSolve('adalet',r,22,tU('da_solve_banner')||'⚖️ +22 nûr — Adaletle hükmettin',c.done); }},
     {l:c.wrong, go:'sw'} ]},
-  sw:{who:'Uyarı', txt:'Delile göre hükmedilir; taraf tutmak zulümdür — yeniden düşün.', opts:[{l:'Yeniden karar ver', go:'s2'}]},
+  sw:{who:tU('da_swwho')||'Uyarı', txt:tU('da_swtxt')||'Delile göre hükmedilir; taraf tutmak zulümdür — yeniden düşün.', opts:[{l:tU('da_swopt')||'Yeniden karar ver', go:'s2'}]},
 }}; }
-SCENE_DO['adalet']=(rec)=>{ if(!scenArmed(rec)){ toast('⚖️ Şimdilik yeni dava yok — biraz sonra meclise yeni bir mesele gelir.'); return; } openDialog(dlgAdalet()); };
+SCENE_DO['adalet']=(rec)=>{ if(!scenArmed(rec)){ toast(tU('da_notyet')||'⚖️ Şimdilik yeni dava yok — biraz sonra meclise yeni bir mesele gelir.'); return; } openDialog(dlgAdalet()); };
 // --- 3) EMANET — taşıma görevi — emanet quest, Medine → Mescid — 3 vaka havuzu ---
 const EMANET_CASES=[
   { owner:'Yaşlı komşun elinde bir <b>kese</b> ile yaklaştı:\n\n— «Pazara gidiyorum, vaktim yok. Şu emaneti <b>Mescid\'deki kardeşime</b> ulaştırır mısın? İçinde onun hakkı var — <b>açma, kaybetme</b>, sahibine ver.»',
@@ -3399,42 +3422,99 @@ const EMANET_CASES=[
     carry:'Yetimin hakkı sende. Mescid\'deki vasîye ulaştır — yetim hakkına dokunma.',
     recWho:'Vasî', recTxt:'Vasî keseyi saydı:\n\n— «Yetimin hakkı <b>tamı tamına</b>. Allah senden râzı olsun; yetim malını koruyan cennette Peygamber\'e komşudur.»' },
 ];
-function curEmanet(){ return EMANET_CASES[scenOf('emanet').idx]; }
-function dlgEmanet(){ const c=curEmanet(); return { ic:'📿', title:'Emaneti Ulaştır', start:'s0', steps:{
-  s0:{who:'Komşu', txt:c.owner, ref:'<b>Âyet:</b> «Allah size, emanetleri ehline vermenizi emreder.» (Nisâ 4/58)<br><b>Hadis:</b> «Emaneti olmayanın imanı yoktur.» (Ahmed)', opts:[
-    {l:'📿 Emaneti al, söz ver', act:()=>takePouch()},
-    {l:'Şimdi olmaz'} ]},
+function curEmanet(){ return scenCase(EMANET_CASES,EMANET_CASES_EN,scenOf('emanet').idx); }
+function dlgEmanet(){ const c=curEmanet(); return { ic:'📿', title:tU('de_title')||'Emaneti Ulaştır', start:'s0', steps:{
+  s0:{who:tU('de_s0who')||'Komşu', txt:c.owner, ref:tU('de_s0ref')||'<b>Âyet:</b> «Allah size, emanetleri ehline vermenizi emreder.» (Nisâ 4/58)<br><b>Hadis:</b> «Emaneti olmayanın imanı yoktur.» (Ahmed)', opts:[
+    {l:tU('de_take')||'📿 Emaneti al, söz ver', act:()=>takePouch()},
+    {l:tU('db_notnow')||'Şimdi olmaz'} ]},
 }}; }
 function takePouch(){ if(S.carryPouch||!player) return; S.carryPouch=true;
   if(!carryPouch){ const it=instance('trust_pouch'); carryPouch=it.g; carryPouch.scale.setScalar(0.85); carryPouch.position.set(-0.15,0.64,0.3); player.add(carryPouch); }   // SOL kolda (kıvrık) GÖĞÜS hizası (0.9→0.64: elin üstünde durmasın)
-  carryPouch.visible=true; save(); sndChime(); banner('📿 Emaneti aldın');
+  carryPouch.visible=true; save(); sndChime(); banner(tU('de_took_banner')||'📿 Emaneti aldın');
   setTimeout(()=>toast(curEmanet().carry),1200);
 }
 function deliverPouch(rec){ S.carryPouch=false; if(carryPouch) carryPouch.visible=false;
   const owner=scenarioRecs.find(x=>x.sid==='emanet_owner')||rec;   // "emanet" quest sahibin kaydına bağlı → ilk teslim sahibi tamamlar (ilerleme)
-  scenSolve('emanet',owner,22,'📿 +22 nûr — Emanet ehline ulaştı','Emaneti sahibine verdin; sözünü tuttun — emanet imanın alâmetidir.'); }
-SCENE_DO['emanet_owner']=(rec)=>{ if(S.carryPouch){ toast('📿 Emaneti hâlâ taşıyorsun — Mescid\'deki sahibine götür.'); return; }
-  if(!scenArmed(rec)){ toast('📿 Şimdilik yeni emanet yok — biraz sonra bir komşu yine emanet verebilir.'); return; } openDialog(dlgEmanet()); };
-SCENE_DO['emanet_deliver']=(rec)=>{ if(!S.carryPouch){ toast('📿 Önce Medine\'de komşudan emaneti al.'); return; }
-  const c=curEmanet(); openDialog({ic:'📿',title:'Emanet Sahibi',start:'s0',steps:{ s0:{who:c.recWho, txt:c.recTxt, opts:[ {l:'📿 Emaneti teslim et', act:()=>deliverPouch(rec)} ]} }}); };
+  scenSolve('emanet',owner,22,tU('de_solve_banner')||'📿 +22 nûr — Emanet ehline ulaştı',tU('de_solve_toast')||'Emaneti sahibine verdin; sözünü tuttun — emanet imanın alâmetidir.'); }
+SCENE_DO['emanet_owner']=(rec)=>{ if(S.carryPouch){ toast(tU('de_carrying')||'📿 Emaneti hâlâ taşıyorsun — Mescid\'deki sahibine götür.'); return; }
+  if(!scenArmed(rec)){ toast(tU('de_notyet')||'📿 Şimdilik yeni emanet yok — biraz sonra bir komşu yine emanet verebilir.'); return; } openDialog(dlgEmanet()); };
+SCENE_DO['emanet_deliver']=(rec)=>{ if(!S.carryPouch){ toast(tU('de_takefirst')||'📿 Önce Medine\'de komşudan emaneti al.'); return; }
+  const c=curEmanet(); openDialog({ic:'📿',title:tU('de_deliver_title')||'Emanet Sahibi',start:'s0',steps:{ s0:{who:c.recWho, txt:c.recTxt, opts:[ {l:tU('de_deliver')||'📿 Emaneti teslim et', act:()=>deliverPouch(rec)} ]} }}); };
 // --- 4) DİLENCİ — gizli sadaka — pazar kenarı (quest'siz, huzur mekaniğine bağlı) ---
-const DLG_DILENCI={ ic:'🤲', title:'Bir Muhtaç', start:'s0', steps:{
-  s0:{who:'Duvar dibinde', txt:'Sokak kenarında, bir duvarın dibinde bir muhtaç oturuyor; kimse dönüp bakmıyor:\n\n— «Bir lokma... bir dirhem... Allah için...»',
-    ref:'<b>Âyet:</b> «Dilenciyi azarlama.» (Duhâ 93/10)<br><b>Hadis:</b> «Gizli sadaka, Rabbin öfkesini söndürür.» (Tirmizî)',
+function dlgDilenci(){ const d=(S.lang==='en')?DILENCI_EN:null; return { ic:'🤲', title:tU('dl_title')||'Bir Muhtaç', start:'s0', steps:{
+  s0:{who:(d&&d.who)||'Duvar dibinde', txt:(d&&d.txt)||'Sokak kenarında, bir duvarın dibinde bir muhtaç oturuyor; kimse dönüp bakmıyor:\n\n— «Bir lokma... bir dirhem... Allah için...»',
+    ref:(d&&d.ref)||'<b>Âyet:</b> «Dilenciyi azarlama.» (Duhâ 93/10)<br><b>Hadis:</b> «Gizli sadaka, Rabbin öfkesini söndürür.» (Tirmizî)',
     opts:[
-    {l:'💰 Bir avuç dirhem ver (3)', act:()=>giveDilenci('dirhem')},
-    {l:'🌴 Bir yiyecek ver', act:()=>giveDilenci('food')},
-    {l:'Şimdi değil'} ]},
-}};
+    {l:tU('dl_dirhem')||'💰 Bir avuç dirhem ver (3)', act:()=>giveDilenci('dirhem')},
+    {l:tU('dl_food')||'🌴 Bir yiyecek ver', act:()=>giveDilenci('food')},
+    {l:tU('db_notnow')||'Şimdi değil'} ]},
+}}; }
 function giveDilenci(kind){
-  if(kind==='dirhem'){ if((S.dirhem||0)<3){ toast('🔒 Yeterli dirhem yok (3 gerek) — pazarda mal sat.'); return; } S.dirhem-=3; }
-  else { if(foodCount()<1){ toast('🔒 Yiyecek yok — hurma/dut/süt topla.'); return; } takeFood(1); }
+  if(kind==='dirhem'){ if((S.dirhem||0)<3){ toast(tU('dl_nodirhem')||'🔒 Yeterli dirhem yok (3 gerek) — pazarda mal sat.'); return; } S.dirhem-=3; }
+  else { if(foodCount()<1){ toast(tU('dl_nofood')||'🔒 Yiyecek yok — hurma/dut/süt topla.'); return; } takeFood(1); }
   S.gather['dilenci']=Date.now()+26000; careAllNeedy(); addNur(10); save(); refreshHUD(); sndChime();
-  banner('🤲 Gizli sadaka'); setTimeout(()=>toast('Sağ elin verdiğini sol elin bilmesin — bir muhtacı boş çevirmedin.'),1200);
+  banner(tU('dl_banner')||'🤲 Gizli sadaka'); setTimeout(()=>toast(tU('dl_toast')||'Sağ elin verdiğini sol elin bilmesin — bir muhtacı boş çevirmedin.'),1200);
 }
-SCENE_DO['dilenci']=(rec)=>{ const t=S.gather['dilenci']; if(t&&Date.now()<t){ toast('🤲 Az önce verdin — biraz sonra tekrar.'); return; } openDialog(DLG_DILENCI); };
+SCENE_DO['dilenci']=(rec)=>{ const t=S.gather['dilenci']; if(t&&Date.now()<t){ toast(tU('dl_justgave')||'🤲 Az önce verdin — biraz sonra tekrar.'); return; } openDialog(dlgDilenci()); };
 // --- 5) FAYDALI İŞ — sebil/gölgelik inşa — hayir quest, Hayır Çeşmesi paneline bağlanır ---
-SCENE_DO['faydali']=(rec)=>{ if(!isUnlocked('sehir')){ toast('🔒 Medine henüz açılmadı'); return; } openHayir(); };
+SCENE_DO['faydali']=(rec)=>{ if(!isUnlocked('sehir')){ toast(tU('t_locked_medina')||'🔒 Medine henüz açılmadı'); return; } openHayir(); };
+
+/* ============ EN İ18N — SENARYO DİYALOG VAKALARI (Faz 3; TERCUME_SOZLUGU.md) ============ */
+const SULH_CASES_EN=[
+  { who:'Border dispute', s0:'Two neighbors are quarreling over a <b>field boundary</b>. When they see you, both turn:\n\n— «You are a just person — tell us <b>which of us is right</b>!»',
+    a:'This wall is the boundary my father set; it was always like this!', b:'No! You took a hand-span of my land — I want my right!',
+    t1:'«Do not burn your Hereafter over a hand-span of land.»', t2:'«Swallow your anger; the one who forgives is raised higher.»',
+    ref:'<b>Verse:</b> «The believers are but brothers, so make peace between your brothers.» (Al-Hujurat 49/10)<br><b>Hadith:</b> «The most virtuous charity is reconciling those who are estranged.» (Abu Dawud)',
+    done:'The brothers reconciled; you won with patience, not anger.' },
+  { who:'Inheritance quarrel', s0:'Two brothers have fallen out over <b>a field and an ox</b> left by their father; they no longer even speak.',
+    a:'I am the one who plows the field, so the ox is my right too!', b:'Being the elder does not mean you take everything!',
+    t1:'«Property can be divided, but brotherhood cannot.»', t2:'«Allah apportions provision; share it fairly.»',
+    ref:'<b>Verse:</b> «Fear Allah and set things right between yourselves.» (Al-Anfal 8/1)<br><b>Hadith:</b> «Do not turn your backs on one another; be brothers.» (Bukhari)',
+    done:'The two brothers made peace; you did not sever the tie of kinship.' },
+  { who:'Market dispute', s0:'In the market a <b>buyer</b> and a <b>seller</b> are quarreling loudly; everyone is watching.',
+    a:'You gave short measure — you cheated me!', b:'Slander! My goods are complete; you\'re after my money!',
+    t1:'«Give full measure; there is blessing in honesty.»', t2:'«A gentle word cools an angry heart.»',
+    ref:'<b>Verse:</b> «When you measure, give full measure, and weigh with an even balance.» (Al-Isra 17/35)<br><b>Hadith:</b> «Whoever cheats us is not one of us.» (Muslim)',
+    done:'The seller corrected the measure and the buyer was appeased; peace returned to the market.' },
+];
+const ADALET_CASES_EN=[
+  { who:'The camel case', s0:'Two people came to the council: a <b>wealthy merchant</b> and a <b>poor shepherd</b>, both claiming the same <b>camel</b>.\n\n— «O judge, this camel is mine!» each of them says.',
+    ev:'<b>Merchant:</b> «I have much wealth, of course it is mine; where would that shepherd get one!»\n<b>Shepherd:</b> «The camel has a notch in its left ear and my knot on its neck — measure it if you wish.»',
+    check:'Check the camel\'s ear and the knot', verdict:'You checked: <b>the notch and the knot are just as the shepherd said</b>. The merchant could offer nothing but his wealth as proof.\n\nIn whose favor do you rule?',
+    right:'⚖️ Rule for the <b>shepherd</b>, who has the proof', wrong:'Rule for the wealthy <b>merchant</b>',
+    ref:'<b>Verse:</b> «Be witnesses who uphold justice, even against yourselves.» (An-Nisa 4/135)<br><b>Hadith:</b> «The burden of proof is upon the claimant.» (Bayhaqi)',
+    done:'You looked to the proof, not to wealth; justice is nearest to piety.' },
+  { who:'The water case', s0:'Two neighbors came: one is accused of diverting the shared <b>water channel</b> to his own field at night; the other was left without water.',
+    ev:'<b>The accused:</b> «I did not touch it, the water flowed on its own!»\n<b>The complainant:</b> «The channel was freshly dug and turned <b>toward his side</b>; the marks are fresh, look.»',
+    check:'Examine the fresh digging marks at the channel\'s edge', verdict:'The marks were freshly dug <b>toward the accused\'s field</b>; he cut off his neighbor\'s water. And water is a shared right.\n\nIn whose favor do you rule?',
+    right:'⚖️ Restore the channel; rule for the <b>neighbor left without water</b>', wrong:'Leave the channel as is, say «it flowed on its own»',
+    ref:'<b>Hadith:</b> «Muslims are partners in three things: water, pasture and fire.» (Abu Dawud)<br><b>Verse:</b> «...do not fall short in measure and weight.» (Ar-Rahman 55/9)',
+    done:'You returned the shared water to its rightful owner; you protected the neighbor\'s right.' },
+  { who:'The wage case', s0:'An <b>employer</b> and a <b>laborer</b> came: the laborer harvested the field, but the employer says «it was left half-done» and withholds his wage.',
+    ev:'<b>Employer:</b> «The work is incomplete, no pay!»\n<b>Laborer:</b> «The whole field was harvested; the villagers are witnesses, go and see.»',
+    check:'Check the field and the witnesses', verdict:'The field was <b>harvested from end to end</b>, and the villagers confirm it. The worker did his job.\n\nIn whose favor do you rule?',
+    right:'⚖️ Have the <b>laborer</b> paid his full wage', wrong:'Rule for the employer, withhold the wage',
+    ref:'<b>Hadith:</b> «Give the worker his wage before his sweat dries.» (Ibn Majah)<br><b>Verse:</b> «...when you judge, judge with justice.» (An-Nisa 4/58)',
+    done:'You had the worker paid before his sweat dried; respect for labor is justice.' },
+];
+const EMANET_CASES_EN=[
+  { owner:'Your elderly neighbor approached with a <b>pouch</b> in hand:\n\n— «I\'m going to the market and have no time. Could you deliver this trust to <b>my brother at the Mosque</b>? His due is inside — <b>do not open it, do not lose it</b>, give it to its owner.»',
+    carry:'The pouch is with you. Deliver it to his brother at the Mosque — do not open it, do not lose it.',
+    recWho:'The brother', recTxt:'The brother held out his hand:\n\n— «So my neighbor sent it... May Allah be pleased with you; you brought the <b>trust intact</b>.»' },
+  { owner:'A <b>widow</b> called from behind a curtain:\n\n— «Child, would you take this <b>bundle</b> to my relative beside the Mosque? There is a trust inside; open it to no one, deliver it to its owner.»',
+    carry:'The bundle is with you. Take it to her relative at the Mosque — a trust is a heavy burden.',
+    recWho:'The relative', recTxt:'The man took the bundle:\n\n— «Our widowed sister sent it... Thank you, my child, it arrived <b>intact</b>. Allah loves the one faithful to a trust.»' },
+  { owner:'A <b>merchant</b> came to you in haste:\n\n— «An orphan child\'s <b>inheritance</b> is in this pouch. I\'m setting out on a journey; deliver it to his <b>guardian</b> at the Mosque — do not touch a single coin, the orphan\'s due is a fire.»',
+    carry:'The orphan\'s due is with you. Deliver it to the guardian at the Mosque — do not touch the orphan\'s right.',
+    recWho:'The guardian', recTxt:'The guardian counted the pouch:\n\n— «The orphan\'s due, <b>exact to the last</b>. May Allah be pleased with you; whoever guards an orphan\'s wealth is a neighbor of the Prophet in Paradise.»' },
+];
+const DILENCI_EN={ who:'By the wall', txt:'By the roadside, at the foot of a wall, a person in need is sitting; no one turns to look:\n\n— «A morsel... a dirham... for the sake of Allah...»',
+  ref:'<b>Verse:</b> «And do not repel the beggar.» (Ad-Duha 93/10)<br><b>Hadith:</b> «Charity given in secret extinguishes the wrath of the Lord.» (Tirmidhi)' };
+// vaka: TR/EN aynı idx (dile göre)
+function scenCase(tr,en,idx){ return (S.lang==='en' && en && en[idx]) ? en[idx] : tr[idx]; }
+// senaryo aksiyon-buton etiketleri (sid → EN)
+const SCEN_BTN_EN={ baris:'🕊️ Make peace', adalet:'⚖️ Judge', emanet_owner:'📿 Take the trust', emanet_deliver:'📿 Deliver', dilenci:'🤲 Give charity', faydali:'🤲 Build a sabil' };
+function scenBtn(rec){ return (S.lang==='en' && rec && SCEN_BTN_EN[rec.sid]) || (rec&&rec.sBtn) || ''; }
 // --- kurulum ---
 function buildScenarios(){
   scenarioRecs=[]; argueList=[]; emanetRecipient=null; sceneIdle=[];
@@ -4341,7 +4421,7 @@ function tick(){
         else if(near.hac){ actBtn.textContent=tU('ab_hac')||'🕋 Umre\'ye niyet'; }
         else if(near.muahat){ actBtn.textContent = S.muahat ? (tU('ab_greet')||'🤝 Selâm ver') : (tU('ab_broth')||'🤝 Kardeş ol'); }
         else if(near.station){ actBtn.textContent = near.sBtn; }
-        else if(near.scenario){ actBtn.textContent = (near.renew ? !scenArmed(near) : (near.q && S.done[near.q.id])) ? (tU('ab_done')||'✓ Tamam') : near.sBtn; }
+        else if(near.scenario){ actBtn.textContent = (near.renew ? !scenArmed(near) : (near.q && S.done[near.q.id])) ? (tU('ab_done')||'✓ Tamam') : scenBtn(near); }
         else if(near.npc){ actBtn.textContent = npcReady(near.def) ? (near.q.ic+' '+(tU('ab_give')||'Ver')) : (tU('ab_gave')||'🙏 Verdin'); }
         else if(near.market){ actBtn.textContent=tU('ab_market')||'🛒 Pazar'; }
         else if(near.animal){ actBtn.textContent = animalReady(near.def) ? (near.q.ic+' '+animalLabel(near.def)) : (tU('ab_rest')||'🐑 Dinleniyor'); }
@@ -4537,6 +4617,7 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
     setStreakDay:(d)=>{ S.streakDay=d; },
     openHayir:()=>openHayir(), donate:(id)=>donateHayir(id),
     openScen:()=>openScen(), scenState:()=>({xp:scenXP(), baris:scenOf('baris'), adalet:scenOf('adalet'), emanet:scenOf('emanet'), titles:{baris:scenTitle('baris'), adalet:scenTitle('adalet'), emanet:scenTitle('emanet')}}),
+    openScenSid:(sid)=>{ const r=scenarioRecs.find(x=>x.sid===sid); if(r) doScenario(r); return !!r; },   // senaryo diyaloğunu tetikle (test)
     hayirCounts:()=>({agac:S.hayir.agac.length,kandil:S.hayir.kandil.length,cesme:S.hayir.cesme.length,ilim:S.hayir.ilim.length}),
     openInv:()=>openInv(), inv:()=>Object.assign({},S.inv),
     gatherNodes:()=>gatherNodes.map(r=>({id:r.def.id, ready:nodeReady(r.def), bareNow:r.bareNow, item:r.def.item})),
