@@ -513,6 +513,7 @@
   <button class="iconbtn" id="hayirBtn" title="Hayır Çeşmesi — nûrunu sadakaya dönüştür">🤲</button>
   <button class="iconbtn" id="scenBtn" title="Senaryo Defteri — sulh · adalet · emanet meseleleri">📜</button>
   <button class="iconbtn" id="modernBtn" title="İhya — Bugün (modern şehir)" style="display:none">🏙️</button>
+  <button class="iconbtn" id="shotBtn" title="Ekran görüntüsü kaydet / paylaş (P)">📷</button>
   <button class="iconbtn" id="helpBtn" title="Nasıl oynanır?">❓</button>
   <button class="iconbtn" id="settingsBtn" title="Ayarlar (kontroller · ses · dil)">⚙️</button>
 </div>
@@ -531,7 +532,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.54</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.55</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -638,6 +639,7 @@
     <div class="setrow"><span class="setkeys"><b>Esc</b></span><span class="setlbl" data-i18n="set_esc">Paneli kapat / geri dön</span></div>
     <div class="setrow"><span class="setkeys"><b>1</b>–<b>0</b></span><span class="setlbl" data-i18n="set_nums">Aksiyon çubuğu: namaz·su·yemek·abdest·oruç·ezber·dağarcık·hayır·senaryo·kıble</span></div>
     <div class="setrow"><span class="setkeys"><b>M</b><b>C</b></span><span class="setlbl" data-i18n="set_mc">M harita · C modern şehir</span></div>
+    <div class="setrow"><span class="setkeys"><b>P</b></span><span class="setlbl" data-i18n="set_shot">📷 Ekran görüntüsü / paylaş</span></div>
     <div class="setrow"><span class="setkeys">🕹️</span><span class="setlbl" data-i18n="set_touch">Dokunmatik: joystick + 🔘 eylem düğmesi</span></div>
     <div class="setsec" data-i18n="set_prefs_h">Tercihler</div>
     <div id="setPrefs"></div>
@@ -1413,6 +1415,7 @@ const UI_STR={ en:{
   hd_inv:'🎒 Satchel', hd_scen:'📖 Case Ledger', hd_market:'🛒 Medina Market', hd_mosque:'🕌 Mosque',
   hd_hayir:'🤲 Fountain of Good', hd_hac:'🕋 Umrah', hd_ezber:'📖 Memorization Book',
   guard_leave:'🕊️ You did wrong — the guarding angel left your side', guard_leave_ref:'«When a servant sins, a black spot is placed on his heart; if he repents and desists, his heart is polished.» (Tirmidhi — hasan)',
+  shot_saved:'📷 Screenshot saved', shot_share:'İhya — revive your world · ihyagame.com', shot_fail:'📷 Could not capture', set_shot:'📷 Screenshot / share',
   hd_settings:'⚙️ Settings', set_controls_h:'🎮 Controls', set_move:'Move (direction keys)', set_act:'Interact · advance dialog', set_esc:'Close panel / go back', set_nums:'Action bar: prayer·water·food·wudu·fast·memorize·satchel·charity·cases·qibla', set_mc:'M map · C modern city', set_touch:'Touch: joystick + 🔘 action button', set_prefs_h:'Preferences', spacekey_s:'Space', set_sound:'🔊 Sound', set_guide:'💡 Guide light', set_lang:'🌐 Language', set_on:'On', set_off:'Off',
   u_close:'Close', u_dirhem:'dirhams', u_meselesuf:'cases', u_steps:'📖 Show steps',
   scen_sub:'Solve Medina\'s cases: judge with justice, reconcile the estranged, deliver the trust. Each case leads to a title.',
@@ -1581,6 +1584,7 @@ ar:{
   'nml_Fecir':'الفجر', 'nml_Öğle':'الظهر', 'nml_İkindi':'العصر', 'nml_Akşam':'المغرب', 'nml_Yatsı':'العشاء',
   hd_inv:'🎒 الجَعبة', hd_scen:'📖 دفتر القضايا', hd_market:'🛒 سوق المدينة', hd_mosque:'🕌 المسجد',
   guard_leave:'🕊️ أخطأتَ — فارقك الملَكُ الحافظ', guard_leave_ref:'«إنّ العبد إذا أذنب نُكتت في قلبه نكتةٌ سوداء، فإن تاب ونزع صُقل قلبه.» (الترمذي — حسن)',
+  shot_saved:'📷 حُفظت لقطة الشاشة', shot_share:'إحياء — أحيِ عالمك · ihyagame.com', shot_fail:'📷 تعذّر الالتقاط', set_shot:'📷 لقطة شاشة / مشاركة',
   hd_settings:'⚙️ الإعدادات', set_controls_h:'🎮 التحكّم', set_move:'الحركة (مفاتيح الاتجاه)', set_act:'التفاعل · متابعة الحوار', set_esc:'إغلاق اللوحة / رجوع', set_nums:'شريط الإجراءات: صلاة·ماء·طعام·وضوء·صوم·حفظ·جَعبة·صدقة·قضايا·قبلة', set_mc:'M الخريطة · C المدينة العصرية', set_touch:'اللمس: عصا التحكّم + زر 🔘', set_prefs_h:'التفضيلات', spacekey_s:'المسافة', set_sound:'🔊 الصوت', set_guide:'💡 ضوء الإرشاد', set_lang:'🌐 اللغة', set_on:'مُفعّل', set_off:'مُغلق',
   hd_hayir:'🤲 نبع الخير', hd_hac:'🕋 العُمرة', hd_ezber:'📖 دفتر الحِفظ',
   u_close:'إغلاق', u_dirhem:'دراهم', u_meselesuf:'قضايا', u_steps:'📖 اعرض الخطوات',
@@ -1815,7 +1819,7 @@ function onNewDay(){
 
 /* ============ THREE SETUP ============ */
 const canvas=document.getElementById('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,preserveDrawingBuffer:true});   // preserveDrawingBuffer: 📷 ekran görüntüsü her cihazda güvenilir (boş kare olmaz)
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 const scene=new THREE.Scene();
@@ -4303,6 +4307,32 @@ function renderSettings(){ const p=document.getElementById('setPrefs'); if(!p) r
 }
 function openSettings(){ audio(); renderSettings(); document.getElementById('settings').classList.add('show'); }
 function closeSettings(){ document.getElementById('settings').classList.remove('show'); }
+// 📷 EKRAN GÖRÜNTÜSÜ — taze kareyi yakala + markalı alt şerit (nûr/rütbe + ihyagame.com) → paylaş/indir (reklam)
+function captureScreenshot(){
+  try{
+    renderer.render(scene,camera);                                  // taze kare (preserveDrawingBuffer yok → hemen yakala)
+    const src=renderer.domElement, W=src.width, H=src.height;
+    const c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+    x.drawImage(src,0,0,W,H);
+    const bh=Math.max(40,Math.round(H*0.072)), pad=Math.round(bh*0.55);
+    const grd=x.createLinearGradient(0,H-bh*1.35,0,H); grd.addColorStop(0,'rgba(9,18,13,0)'); grd.addColorStop(0.4,'rgba(9,18,13,0.5)'); grd.addColorStop(1,'rgba(9,18,13,0.74)');
+    x.fillStyle=grd; x.fillRect(0,H-bh*1.35,W,bh*1.35); x.textBaseline='middle';
+    x.font='900 '+Math.round(bh*0.52)+'px system-ui,sans-serif'; x.fillStyle='#8fce58'; x.textAlign='left'; x.fillText('İhya', pad, H-bh*0.5);
+    const nurTxt=(document.getElementById('nur')?document.getElementById('nur').textContent:String(S.nur||0));
+    const rankTxt=(document.getElementById('rank')?document.getElementById('rank').textContent.trim():'');
+    x.font='700 '+Math.round(bh*0.34)+'px system-ui,sans-serif'; x.fillStyle='#eaf3ec'; x.fillText('✦ '+nurTxt+(rankTxt?'  ·  '+rankTxt:''), pad+Math.round(bh*1.7), H-bh*0.5);
+    x.textAlign='right'; x.fillStyle='#cfe0c8'; x.font='700 '+Math.round(bh*0.33)+'px system-ui,sans-serif'; x.fillText('ihyagame.com', W-pad, H-bh*0.5);
+    c.toBlob(blob=>{ if(!blob){ toast(tU('shot_fail')||'📷 Görüntü alınamadı'); return; }
+      const fname='ihya-'+Date.now()+'.png', file=new File([blob],fname,{type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'İhya', text:(tU('shot_share')||'İhya — dünyanı ihyâ et · ihyagame.com')}).catch(()=>{});
+      } else {
+        const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+        toast(tU('shot_saved')||'📷 Ekran görüntüsü kaydedildi');
+      }
+    },'image/png');
+  }catch(e){ toast('📷 '+((e&&e.message)||'hata')); }
+}
 /* ---- HARİTA (adalar + durum + görev) ---- */
 const ISLAND_EMO={ ev:'🏠', bahce:'🌴', mahalle:'🤝', cami:'🕌', sehir:'🏙️', atolye:'🔨', sadaka:'🤲' };
 function hasActiveQuest(id){
@@ -6164,6 +6194,7 @@ document.getElementById('muteBtn').onclick=()=>{ audio(); setMuted(!muted); };
 setMuted(muted);  // ilk ikon durumu (kayıtlı tercih)
 document.getElementById('hayirBtn').onclick=openHayir;
 document.getElementById('scenBtn').onclick=openScen;   // Senaryo Defteri artık AYRI (Hayır'dan bağımsız)
+document.getElementById('shotBtn').onclick=captureScreenshot;   // 📷 ekran görüntüsü kaydet/paylaş
 document.getElementById('settingsBtn').onclick=openSettings;   // ⚙️ Ayarlar (kontroller + tercihler)
 document.getElementById('settingsClose').onclick=closeSettings;
 document.getElementById('settings').addEventListener('click',e=>{ if(e.target.id==='settings') closeSettings(); });
@@ -6290,6 +6321,7 @@ addEventListener('keydown',e=>{
   // AKSİYON/PANEL kısayolları — sadece oyun ekranında (açık panel yok, mescit/hac değil)
   if(mosqueMode||hacMode||anyOverlayOpen()) return;
   const k=e.key.toLowerCase();
+  if(k==='p'){ e.preventDefault(); captureScreenshot(); return; }                               // 📷 ekran görüntüsü
   if(k==='m'){ e.preventDefault(); openMap(); return; }                                        // harita
   if(k==='c'){ const mb=document.getElementById('modernBtn'); if(mb && mb.style.display!=='none'){ e.preventDefault(); mb.click(); } return; }   // modern şehir (açıksa)
   if(KEYMAP[e.key]){ const b=document.getElementById(KEYMAP[e.key]); if(b && getComputedStyle(b).display!=='none'){ e.preventDefault(); b.click(); } return; }   // 1-0 toolbar (görünürse)
