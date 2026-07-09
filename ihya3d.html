@@ -531,7 +531,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.52</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.53</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -3126,6 +3126,7 @@ const MODERN_HOME={ tr:{
   teach:{ btn:'📖 Çocuğa Kur\'an öğret', who:'İlim · sadaka-i câriye', x:'Çocuğuna bir âyet, bir dua öğret; öğrettiğin ilim sen göçtükten sonra da amel defterine akar. <i>«Sizin en hayırlınız, Kur\'an\'ı öğrenen ve öğretendir.»</i> (Buhârî)', ok:'📖 Öğrettin — akan sadaka' },
   eat:{ btn:'🍲 Evde yemek ye (şükür)', who:'Şükür · israf etme', x:'Ev sofrasını şükürle ye; nimeti hafife alma, israf etme, komşunu da an. <i>«Yiyin, için; fakat israf etmeyin.»</i> (A\'râf 7/31)', ok:'🍲 Şükrünü eda ettin', full:'🍽️ Şu an toksun — nimeti israf etme, sonra ye.' },
   rest:{ btn:'😴 Dinlen (bedenin hakkı)', who:'Bedenin hakkı', x:'Ölçülü dinlen ki ibadete ve işine kuvvet bulasın; tembellik değil, dengeyi gözet. <i>«Bedeninin senin üzerinde hakkı vardır.»</i> (Buhârî)', ok:'😴 Dinlendin — kuvvet buldun' },
+  leave:{ btn:'🚪 Evden çık (dua ile)', who:'Evden çıkış duası', x:'<div dir="rtl" style="font-size:19px;line-height:1.8">بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ</div><i>Bismillâh, tevekkeltü alâllâh, ve lâ havle ve lâ kuvvete illâ billâh.</i><br>(Allah\'ın adıyla; Allah\'a tevekkül ettim; güç ve kuvvet ancak Allah\'ladır.)', say:'🤲 Duayı oku ve çık', ok:'🕊️ Duayla çıktın — koruyucu melek sana eşlik ediyor', narr:'«Ona: hidayete erdirildin, (işine) yeterli gelindi ve korundun, denir; şeytan da ondan uzaklaşır.» (Ebû Dâvûd · Tirmizî — hasen)' },
 }, en:{
   t:'Home — Daily Life', intro:'Find peace at home: pray, tend to your family, teach your child knowledge, give thanks, and rest in moderation. The home is ihya\'s first school.',
   back:'‹ Back', bye:'Leave', ddo:'✓ Do it', cd:'⏳ You just did this — take a break; consistency, not showing off, is the goal.',
@@ -3134,6 +3135,7 @@ const MODERN_HOME={ tr:{
   teach:{ btn:'📖 Teach your child Qur\'an', who:'Knowledge · ongoing charity', x:'Teach your child a verse, a supplication; the knowledge you pass on flows into your record even after you pass. <i>«The best of you is he who learns the Qur\'an and teaches it.»</i> (Bukhari)', ok:'📖 You taught — flowing charity' },
   eat:{ btn:'🍲 Eat at home (gratitude)', who:'Gratitude · no waste', x:'Eat your home meal with thanks; do not belittle the blessing, do not waste, remember your neighbor. <i>«Eat and drink, but do not be wasteful.»</i> (Al-A\'raf 7/31)', ok:'🍲 You gave thanks', full:'🍽️ You are full now — do not waste; eat later.' },
   rest:{ btn:'😴 Rest (body\'s right)', who:'Body\'s right', x:'Rest in moderation so you have strength for worship and work; not laziness, but balance. <i>«Your body has a right over you.»</i> (Bukhari)', ok:'😴 You rested — regained strength' },
+  leave:{ btn:'🚪 Leave home (with the supplication)', who:'Supplication for leaving home', x:'<div dir="rtl" style="font-size:19px;line-height:1.8">بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ</div><i>Bismillah, tawakkaltu ʿala Allah, wa la hawla wa la quwwata illa billah.</i><br>(In the name of Allah; I place my trust in Allah; there is no might nor power except by Allah.)', say:'🤲 Recite and leave', ok:'🕊️ You left with the supplication — a guarding angel accompanies you', narr:'«It is said to him: You are guided, sufficed and protected — and Satan withdraws from him.» (Abu Dawud · Tirmidhi — hasan)' },
 }, ar:{
   t:'البيت — الحياة اليومية', intro:'اجعل بيتك سكنًا: صلِّ، وتعهَّد أهلك، وعلِّم ولدك، واشكر، واسترِح باعتدال. البيتُ أولُ مدرسةٍ للإحياء.',
   back:'‹ رجوع', bye:'خروج', ddo:'✓ افعل', cd:'⏳ فعلتَها للتو — خذ راحة؛ العبرة بالدوام لا بالرياء.',
@@ -3142,6 +3144,7 @@ const MODERN_HOME={ tr:{
   teach:{ btn:'📖 علِّم ولدك القرآن', who:'علم · صدقة جارية', x:'علِّم ولدك آيةً ودعاءً؛ فالعلم الذي تنشره يجري في صحيفتك بعد رحيلك. <i>«خيرُكم من تعلَّم القرآن وعلَّمه.»</i> (البخاري)', ok:'📖 علَّمتَ — صدقةٌ جارية' },
   eat:{ btn:'🍲 كُل في البيت (شكرًا)', who:'شكر · لا إسراف', x:'كُل طعام بيتك شاكرًا؛ لا تستهِن بالنعمة ولا تُسرِف، واذكر جارك. <i>«كلوا واشربوا ولا تسرفوا.»</i> (الأعراف ٣١)', ok:'🍲 أدّيتَ الشكر', full:'🍽️ أنت شبعان الآن — لا تُسرِف، كُل لاحقًا.' },
   rest:{ btn:'😴 استرِح (حقُّ البدن)', who:'حقُّ البدن', x:'استرِح باعتدال لتقوى على العبادة والعمل؛ ليس كسلًا بل توازنًا. <i>«إنّ لبدنك عليك حقًّا.»</i> (البخاري)', ok:'😴 استرحتَ — تجدّدت قوّتك' },
+  leave:{ btn:'🚪 اخرُج من البيت (بالدعاء)', who:'دعاء الخروج من البيت', x:'<div dir="rtl" style="font-size:19px;line-height:1.8">بِسْمِ اللَّهِ، تَوَكَّلْتُ عَلَى اللَّهِ، وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ</div>(باسم الله؛ توكّلتُ على الله؛ ولا حول ولا قوّة إلا بالله.)', say:'🤲 اقرأ الدعاء واخرُج', ok:'🕊️ خرجتَ بالدعاء — يصحبك ملَكٌ حافظ', narr:'«يُقال له: هُديتَ وكُفيتَ ووُقيتَ، ويتنحّى عنه الشيطان.» (أبو داود · الترمذي — حسن)' },
 } };
 function moHome(){ const L=(S.lang==='en'||S.lang==='ar')?S.lang:'tr'; return MODERN_HOME[L]||MODERN_HOME.tr; }
 function openModernHome(rec){ const H=moHome(); audio();
@@ -3149,13 +3152,47 @@ function openModernHome(rec){ const H=moHome(); audio();
   const reward=(k,nur,extra)=>{ if(on(k)){ toast(H.cd); return; } addNur(nur); if(extra) extra(); S.homeCd[k]=Date.now()+HOME_CD; save(); refreshHUD(); sndChime(); banner(H[k].ok+' · +'+nur+(tU('nur_suffix')||' nûr')); };
   const act=(k,fn)=>({ who:H[k].who, txt:H[k].x, opts:[ { l:H.ddo, act:fn, go:'s0' }, { l:H.back, go:'s0' } ] });
   openDialog({ ic:'🏠', title:H.t, start:'s0', steps:{
-    s0:{ who:H.t, txt:H.intro, opts:[ {l:H.pray.btn,go:'pray'}, {l:H.family.btn,go:'family'}, {l:H.teach.btn,go:'teach'}, {l:H.eat.btn,go:'eat'}, {l:H.rest.btn,go:'rest'}, {l:H.bye} ] },
+    s0:{ who:H.t, txt:H.intro, opts:[ {l:H.pray.btn,go:'pray'}, {l:H.family.btn,go:'family'}, {l:H.teach.btn,go:'teach'}, {l:H.eat.btn,go:'eat'}, {l:H.rest.btn,go:'rest'}, {l:H.leave.btn,go:'leave'}, {l:H.bye} ] },
     pray:act('pray',()=>{ reward('pray',6,()=>dgBump('pray')); }),
     family:act('family',()=>{ reward('family',8); }),
     teach:act('teach',()=>{ reward('teach',8); }),
     eat:act('eat',()=>{ if((S.hunger||0)<15){ toast(H.eat.full); return; } S.hunger=Math.max(0,(S.hunger||0)-45); reward('eat',2); }),
     rest:act('rest',()=>{ reward('rest',3); }),
+    leave:{ who:H.leave.who, txt:H.leave.x, opts:[ { l:H.leave.say, act:()=>reciteLeaveHome() }, { l:H.back, go:'s0' } ] },
   }});
+}
+// EVDEN ÇIKIŞ DUASI → koruyucu melek eşliği (sahih rivayetin görsel temsili; metin Ebû Dâvûd/Tirmizî'ye sadık)
+function reciteLeaveHome(){ const H=moHome(); addNur(5); save(); refreshHUD(); sndChime();
+  if(typeof closeDialog==='function') closeDialog();
+  spawnGuardian(48); banner(H.leave.ok); setTimeout(()=>toast(H.leave.narr),700); }
+// ---- KORUYUCU MELEK (sancaklı) — oyuncuyu bir süre eşlik eder, ışık saçar ----
+let guardianAngel=null, guardianUntil=0, guardianWings=[], guardianLight=null;
+const GUARD_SC=1.15;   // melek ölçeği (oyuncuyu kapamayacak, ince zarif silüet)
+function buildGuardianAngel(){ if(guardianAngel) return guardianAngel;
+  const g=new THREE.Group();
+  const robe=new THREE.Mesh(new THREE.CylinderGeometry(0.24,0.5,1.7,16), new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff0c8,emissiveIntensity:0.5,roughness:0.6})); robe.position.y=0.85; g.add(robe);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.33,18,14), new THREE.MeshStandardMaterial({color:0xfff7e6,emissive:0xffe9a8,emissiveIntensity:0.45})); head.position.y=1.85; g.add(head);
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(0.38,0.05,10,26), new THREE.MeshBasicMaterial({color:0xffe27a,fog:false})); halo.position.y=2.22; halo.rotation.x=Math.PI/2; g.add(halo);
+  for(const s of [-1,1]){ const w=new THREE.Mesh(new THREE.PlaneGeometry(1.25,1.5), new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff2cc,emissiveIntensity:0.45,side:THREE.DoubleSide,transparent:true,opacity:0.88})); w.position.set(s*0.4,1.15,-0.16); w.rotation.y=s*0.95; guardianWings.push({m:w,s}); g.add(w); }
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,2.3,8), new THREE.MeshStandardMaterial({color:0xe6cf8f,emissive:0x6b5a2a,emissiveIntensity:0.3})); pole.position.set(0.66,1.35,-0.05); g.add(pole);
+  const flag=new THREE.Mesh(new THREE.PlaneGeometry(1.3,0.8), new THREE.MeshStandardMaterial({color:0x2f8f63,emissive:0x1f7a52,emissiveIntensity:0.5,side:THREE.DoubleSide})); flag.position.set(1.32,1.95,-0.05); g.add(flag);
+  guardianLight=new THREE.PointLight(0xffe9b0,0,15,2); guardianLight.position.y=1.5; g.add(guardianLight);
+  g.visible=false; g.scale.setScalar(GUARD_SC); scene.add(g); guardianAngel=g; return g;
+}
+function spawnGuardian(sec){ buildGuardianAngel(); guardianUntil=Date.now()+(sec||45)*1000;
+  if(player){ guardianAngel.position.set(player.position.x+3.0, 0.25, player.position.z-2.4); } }
+function updateGuardian(dt){ if(!guardianAngel) return;
+  const active = guardianUntil>Date.now() && !!player;
+  if(!active){ if(guardianAngel.visible){ guardianAngel.visible=false; if(guardianLight) guardianLight.intensity=0; } return; }
+  guardianAngel.visible=true; const t=clock.elapsedTime;
+  const tx=player.position.x+3.0, tz=player.position.z-2.4, e=Math.min(1,dt*2.6);   // oyuncunun sağ-arkasında süzülerek eşlik eder (kapatmaz)
+  guardianAngel.position.x += (tx-guardianAngel.position.x)*e;
+  guardianAngel.position.z += (tz-guardianAngel.position.z)*e;
+  guardianAngel.position.y = 0.35 + Math.sin(t*2)*0.16;                 // süzülme
+  guardianAngel.rotation.y = player.rotation.y;                          // oyuncuyla aynı yöne bakar
+  for(const w of guardianWings){ w.m.rotation.y = w.s*(0.8+Math.sin(t*7)*0.28); }   // kanat çırpma
+  if(guardianLight) guardianLight.intensity = 1.5+Math.sin(t*3.2)*0.4;
+  const rem=(guardianUntil-Date.now())/1000; const sc=(rem<3)?GUARD_SC*(0.25+0.75*Math.max(0,rem/3)):GUARD_SC; guardianAngel.scale.setScalar(sc);
 }
 // ---- MODERN KOMŞULAR: meydanda dolaşan kişiler; selâmlaşınca karşılıklı tek-el selâm ----
 let modernNeighborsBuilt=false;
@@ -6655,6 +6692,7 @@ function tick(){
     const m=meclisRoof.material, tgt=under?0.10:1; m.transparent=under||m.opacity<0.99;   // daha net saydam
     m.opacity += (tgt-m.opacity)*0.18; m.depthWrite=m.opacity>0.9; if(m.opacity>0.995){m.opacity=1;m.transparent=false;} }
   updateGuideBeacon();
+  if(typeof updateGuardian==='function') updateGuardian(dt);   // evden çıkış duası → koruyucu melek eşliği
   renderer.render(scene,camera);
   requestAnimationFrame(tick);
 }
