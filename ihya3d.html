@@ -187,6 +187,12 @@
     .nbar{width:52px}
     .adalet{padding:4px 9px;font-size:11.5px}
     #banner{font-size:17px;padding:12px 18px;max-width:92vw}
+    /* Hayır/Sadaka kartları mobilde sıkı: buton dar → başlığa yer, uzun ad temiz sarar */
+    .hcard{gap:8px;padding:9px 10px}
+    .hic{width:28px;font-size:22px}
+    .hnm{font-size:13.5px;line-height:1.25}
+    .href{font-size:10.5px}
+    .hbuy{padding:8px 10px;font-size:12.5px}
   }
   @media (max-width:360px){ #skySvg{width:66px} #miniMap{width:48px;height:48px} .pill.nur small{display:none} }
   .prog{flex:1;max-width:180px;height:9px;background:#ffffff88;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px #0001}
@@ -252,8 +258,8 @@
   .hcard{display:flex;align-items:center;gap:11px;padding:11px 12px;margin-bottom:9px;border-radius:14px;background:#f3f7f3;border:1px solid #e3ece5}
   .hic{font-size:26px;flex-shrink:0;width:34px;text-align:center}
   .hbody{flex:1;min-width:0}
-  .hnm{font-size:15px;font-weight:800;color:var(--ink)}
-  .hcnt{font-size:11px;color:var(--muted);font-weight:700}
+  .hnm{font-size:15px;font-weight:800;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .hcnt{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0}
   .href{font-size:11px;color:var(--muted);line-height:1.4;margin-top:3px}
   .hbuy{flex-shrink:0;border:none;border-radius:12px;padding:10px 13px;font-weight:800;font-size:14px;cursor:pointer;background:linear-gradient(135deg,#e9c478,#d9a441);color:#33240a}
   .hbuy.off{background:#dfe4df;color:#9aa;cursor:default}
@@ -470,7 +476,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.46</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.47</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -1287,7 +1293,7 @@ const UI_STR={ en:{
   ab_market:'🛒 Market', ab_rest:'🐑 Resting', ab_gather:'Gather', ab_ripening:'🌱 Ripening',
   ab_exam_done:'Grounds ✓', ab_exam_enter:'📝 Take exam', ab_exam_lock:'🔒 Lessons first',
   ab_look:'Look ✓', ab_interact:'Interact', ab_notyet:'🔒 Not yet',
-  pr_seccade:'🧎 Take your prayer rug', pr_mosque:'🕌 Enter the mosque', pr_hac:'🕋 Intend Umrah',
+  pr_seccade:'🧎 Your prayer rug is here', pr_mosque:'🕌 Enter the mosque', pr_hac:'🕋 Intend Umrah',
   pr_market:'🛒 Medina Market', pr_rest:'🐑 resting', pr_gave:' — given', pr_gatherv:'Gather', pr_ripen:' — ripening', pr_exam:'Trial Grounds',
   good_hurma:'Dates', good_dut:'Mulberries', good_sut:'Milk', good_yun:'Wool', good_ekmek:'Bread',
   good_su:'Water', good_bal:'Honey', good_bugday:'Wheat', good_un:'Flour', good_yumurta:'Eggs',
@@ -1354,7 +1360,7 @@ const UI_STR={ en:{
   iv_zekat_suf:' zakat',
   // --- Faz 2b-2: Hayır Çeşmesi kalemleri (adlar; ref'ler Faz 3) ---
   hy_agac:'Plant a tree', hy_kandil:'Light a lantern', hy_cesme:'Build a fountain',
-  hy_ilim:'Endow a Qur\'an', hy_sebil:'Build a public water post (sabil)', hy_golge:'Build a shade shelter',
+  hy_ilim:'Endow a Qur\'an', hy_sebil:'Build a sabil (water post)', hy_golge:'Build a shade shelter',
   // --- Faz 2b-2: ortak ---
   t_locked_place:'🔒 This place isn\'t open yet', dlg_ok:'OK', q_done:'Done ✓',
   q_didit:'Done ✓', q_undo:'Undo ↺', q_prereq:'🔒 First: ', q_nextstep:'the next step',
@@ -1484,7 +1490,7 @@ ar:{
   ab_market:'🛒 السوق', ab_rest:'🐑 يستريح', ab_gather:'اجمع', ab_ripening:'🌱 يَنضج',
   ab_exam_done:'الميدان ✓', ab_exam_enter:'📝 ادخل الامتحان', ab_exam_lock:'🔒 الدروس أولًا',
   ab_look:'انظر ✓', ab_interact:'تفاعل', ab_notyet:'🔒 ليس بعد',
-  pr_seccade:'🧎 خُذ سجّادة الصلاة', pr_mosque:'🕌 ادخل المسجد', pr_hac:'🕋 انوِ العُمرة',
+  pr_seccade:'🧎 سجّادتك هنا', pr_mosque:'🕌 ادخل المسجد', pr_hac:'🕋 انوِ العُمرة',
   pr_market:'🛒 سوق المدينة', pr_rest:'🐑 يستريح', pr_gave:' — أُعطيت', pr_gatherv:'اجمع', pr_ripen:' — يَنضج', pr_exam:'ميدان الامتحان',
   good_hurma:'تمر', good_dut:'توت', good_sut:'حليب', good_yun:'صوف', good_ekmek:'خبز',
   good_su:'ماء', good_bal:'عسل', good_bugday:'قمح', good_un:'دقيق', good_yumurta:'بيض',
@@ -2802,13 +2808,13 @@ function buildModern(){
   if(modernBuilt) return; modernBuilt=true;
   const ox=MODERN_ORIGIN[0], oz=MODERN_ORIGIN[2]; const g=new THREE.Group(); modernGroup=g;
   // ŞEHİR 2× BÜYÜDÜ (MODERN_R=48) — merkezde CAMİ, şehir onun etrafında halkalanır
-  const ground=new THREE.Mesh(new THREE.CircleGeometry(52,72), new THREE.MeshStandardMaterial({color:0x606670,roughness:1})); ground.rotation.x=-Math.PI/2; ground.position.set(ox,0.02,oz); g.add(ground);
-  const grass=new THREE.Mesh(new THREE.RingGeometry(52,68,72), new THREE.MeshStandardMaterial({color:0x6f9a54,roughness:1})); grass.rotation.x=-Math.PI/2; grass.position.set(ox,0.01,oz); g.add(grass);
-  const plaza=new THREE.Mesh(new THREE.CircleGeometry(15,48), new THREE.MeshStandardMaterial({color:0x6c727a,roughness:1})); plaza.rotation.x=-Math.PI/2; plaza.position.set(ox,0.028,oz); g.add(plaza);   // caminin etrafında meydan (açık taş)
+  const ground=new THREE.Mesh(new THREE.CircleGeometry(52,72), new THREE.MeshStandardMaterial({color:0xb4b0a2,roughness:1})); ground.rotation.x=-Math.PI/2; ground.position.set(ox,0.02,oz); g.add(ground);   // açık gündüz kaldırımı (eski koyu slate → gündüz aydınlığı)
+  const grass=new THREE.Mesh(new THREE.RingGeometry(52,68,72), new THREE.MeshStandardMaterial({color:0x7bab5c,roughness:1})); grass.rotation.x=-Math.PI/2; grass.position.set(ox,0.01,oz); g.add(grass);
+  const plaza=new THREE.Mesh(new THREE.CircleGeometry(15,48), new THREE.MeshStandardMaterial({color:0xcac4b4,roughness:1})); plaza.rotation.x=-Math.PI/2; plaza.position.set(ox,0.028,oz); g.add(plaza);   // caminin etrafında meydan (açık taş)
   // merkez cami'ye radyal bağlantı yolları (haç) — cami etrafında sıralanan binalara
-  for(const ry of [0,Math.PI/2]){ const rd=new THREE.Mesh(new THREE.PlaneGeometry(4,80),new THREE.MeshStandardMaterial({color:0x4a4f57,roughness:1})); rd.rotation.x=-Math.PI/2; rd.rotation.z=ry; rd.position.set(ox,0.03,oz); g.add(rd); }
+  for(const ry of [0,Math.PI/2]){ const rd=new THREE.Mesh(new THREE.PlaneGeometry(4,80),new THREE.MeshStandardMaterial({color:0x777c84,roughness:1})); rd.rotation.x=-Math.PI/2; rd.rotation.z=ry; rd.position.set(ox,0.03,oz); g.add(rd); }
   // EN DIŞ RING YOL (otobüsün özel yolu) — meydan kenarında asfalt halka + kesikli şerit
-  const ringRoad=new THREE.Mesh(new THREE.RingGeometry(43,49,96), new THREE.MeshStandardMaterial({color:0x393e44,roughness:1})); ringRoad.rotation.x=-Math.PI/2; ringRoad.position.set(ox,0.035,oz); g.add(ringRoad);
+  const ringRoad=new THREE.Mesh(new THREE.RingGeometry(43,49,96), new THREE.MeshStandardMaterial({color:0x5f646c,roughness:1})); ringRoad.rotation.x=-Math.PI/2; ringRoad.position.set(ox,0.035,oz); g.add(ringRoad);
   const laneMat=new THREE.MeshStandardMaterial({color:0xd8d2b8,roughness:1});
   for(let a=0;a<Math.PI*2;a+=Math.PI/32){ const dash=new THREE.Mesh(new THREE.BoxGeometry(1.4,0.02,0.24),laneMat); dash.position.set(ox+46*Math.cos(a),0.05,oz+46*Math.sin(a)); dash.rotation.y=-a; g.add(dash); }   // ring şerit çizgileri
   const bldKind = isChild()?'okul':'is';
@@ -3961,7 +3967,7 @@ const HAYIR=[
   {id:'kandil',ic:'🏮', nm:'Kandil yaktır', cost:40, reward:36, max:8,  ref:'Mallarını Allah yolunda harcayanların durumu, yedi başak veren bir tohum gibidir. (Bakara 2/261)'},
   {id:'cesme', ic:'⛲', nm:'Çeşme yaptır',  cost:70, reward:63, max:4,  ref:'Sadakanın en faziletlisi, (susayana) su ikram etmektir. (İbn Mâce, Edeb 8)'},
   {id:'ilim',  ic:'📖', nm:'Mushaf vakfet', cost:100,reward:90, max:4,  ref:'İnsan ölünce ameli kesilir; sadaka-i câriye, faydalı ilim ve hayırlı evlât müstesnâ. (Müslim, Vasiyyet 14)'},
-  {id:'sebil', ic:'🚰', nm:'Sebil (halk çeşmesi) yaptır', cost:60, reward:54, max:4, ref:'İnsanların en hayırlısı, insanlara en faydalı olanıdır. (Taberânî) — su akar, sadakan akar.'},
+  {id:'sebil', ic:'🚰', nm:'Sebil çeşmesi yaptır', cost:60, reward:54, max:4, ref:'Sebil: halkın su içtiği çeşme. İnsanların en hayırlısı, insanlara en faydalı olanıdır. (Taberânî) — su akar, sadakan akar.'},
   {id:'golge', ic:'⛱️', nm:'Gölgelik yaptır',  cost:50, reward:45, max:4, ref:'Bir mümin, yolun üzerine gölge/sığınak bırakırsa, ondan faydalanan herkes için ecir alır. (Buhârî mânâ)'},
 ];
 for(const h of HAYIR) if(!S.hayir[h.id]) S.hayir[h.id]=[];   // eski kayıtlara yeni hayır kalemleri için boş dizi
@@ -6389,7 +6395,7 @@ function tick(){
     if(near){ // etkileşim yazısı: sabit ALT-ORTA altyazı (kamera odağıyla birlikte belirir) — projeksiyon yok
       promptEl.style.display='block'; promptEl.classList.add('show');
       promptEl.textContent = near.seccadePickup
-        ? (tU('pr_seccade')||'🧎 Seccadeni al')
+        ? (tU('pr_seccade')||'🧎 Seccaden burada')
         : near.mosque
         ? (tU('pr_mosque')||'🕌 Mescid\'e gir')
         : near.hac
