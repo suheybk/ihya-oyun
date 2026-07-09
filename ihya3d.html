@@ -462,7 +462,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.40</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.41</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -2797,7 +2797,7 @@ function buildModern(){
   const grass=new THREE.Mesh(new THREE.RingGeometry(26,34,48), new THREE.MeshStandardMaterial({color:0x6f9a54,roughness:1})); grass.rotation.x=-Math.PI/2; grass.position.set(ox,0.01,oz); g.add(grass);
   const road=new THREE.Mesh(new THREE.PlaneGeometry(3.2,48), new THREE.MeshStandardMaterial({color:0x4a4f57,roughness:1})); road.rotation.x=-Math.PI/2; road.position.set(ox,0.03,oz); g.add(road);
   const bldKind = isChild()?'okul':'is';
-  const defs=[ {kind:'ev',ic:'🏢',bx:ox-11,bz:oz-7}, {kind:bldKind,ic:(bldKind==='okul'?'🏫':'💼'),bx:ox+11,bz:oz-7}, {kind:'cami',ic:'🕌',bx:ox,bz:oz+12}, {kind:'market',ic:'🛒',bx:ox+12,bz:oz+6}, {kind:'banka',ic:'🏦',bx:ox-12,bz:oz+6}, {kind:'durak',ic:'🚌',bx:ox-4,bz:oz-9} ];
+  const defs=[ {kind:'ev',ic:'🏢',bx:ox-11,bz:oz-7}, {kind:bldKind,ic:(bldKind==='okul'?'🏫':'💼'),bx:ox+11,bz:oz-7}, {kind:'cami',ic:'🕌',bx:ox,bz:oz+12}, {kind:'market',ic:'🛒',bx:ox+12,bz:oz+6}, {kind:'banka',ic:'🏦',bx:ox-12,bz:oz+6}, {kind:'durak',ic:'🚌',bx:ox+14,bz:oz+7} ];
   for(const d of defs){
     if(d.kind==='ev'){ g.add(mkBox(6,11,6,0xcdb892,d.bx,5.5,d.bz));
       for(let fy=1.6;fy<10;fy+=2.1) for(let wx=-1.7;wx<=1.7;wx+=1.7) g.add(mkBox(1.1,1.2,0.12,0x8fc7e0,d.bx+wx,fy,d.bz+3.06));
@@ -3050,7 +3050,7 @@ function moCong(){ const L=(S.lang==='en'||S.lang==='ar')?S.lang:'tr'; return CO
 function formModernCongregation(durSec){ if(!inModern||!player) return 0;
   const px=player.position.x, pz=player.position.z;
   const spots=[[px-1.35,pz+2.4],[px+1.35,pz+2.4],[px,pz+3.9]];   // imam(oyuncu) önde, cemaat arkada (kıble -z)
-  const cand=npcWander.filter(n=>n.rec&&n.rec.modern==='komsu')
+  const cand=npcWander.filter(n=>n.rec&&n.rec.modern==='komsu'&&!n.onBus&&n.rec.g.visible)
     .map(n=>({n,d:Math.hypot(n.rec.g.position.x-px,n.rec.g.position.z-pz)})).filter(o=>o.d<16).sort((a,b)=>a.d-b.d).slice(0,3);
   let cnt=0; cand.forEach((o,i)=>{ o.n.congT=durSec+1.4; o.n.congSpot=spots[i]; cnt++; });
   if(cnt>0){ addNur(3); banner(tU('mo_cong')||'🕌 Komşuların cemaat oldu — namaz cemaatle 27 kat'); }
@@ -3065,6 +3065,37 @@ function openCongregationChoice(){ if(!inModern) return; const M=moCong();
     { l:M.wait, act:()=>{ addNur(5); endModernCongregation(); save(); refreshHUD(); toast(M.waitd); if(typeof closeDialog==='function') closeDialog(); } }
   ] } }});
 }
+// ---- GERÇEK OTOBÜS: şehir çevresinde ring rotada dolaşır, durakta durur, komşular biner/iner ----
+const BUS_R=18, BUS_SPEED=0.30, DWELL=4.2, STOP_ANGLE=Math.atan2(7,14);   // durak (ox+14,oz+7) açısı
+let modernBus=null;
+function buildBus(){ if(modernBus||!modernGroup) return; const g=new THREE.Group();
+  g.add(mkBox(2.6,2.0,5.4,0xE0A93A,0,1.35,0));            // gövde (sarı otobüs)
+  g.add(mkBox(2.64,0.85,4.4,0x2f4a6b,0,1.95,0.15));       // pencere şeridi (mavi cam)
+  g.add(mkBox(2.7,0.3,5.6,0xcf972f,0,2.4,0));             // tavan
+  g.add(mkBox(1.7,0.8,0.12,0xdfe7ef,0,1.45,2.72));        // ön cam
+  for(const wz of [1.9,-1.9]) for(const wx of [1.0,-1.0]) g.add(mkBox(0.55,0.55,0.55,0x1c1c1c,wx,0.45,wz));   // tekerler
+  g.add(mkBox(0.7,1.5,0.1,0x3a2f26,-0.95,1.05,2.7));      // kapı (ön sağ)
+  modernGroup.add(g);
+  modernBus={ g, theta:STOP_ANGLE+0.5, state:'run', dwellT:0, passenger:null, armed:true };
+}
+function busStopPos(){ return [MODERN_ORIGIN[0]+BUS_R*Math.cos(STOP_ANGLE), MODERN_ORIGIN[2]+BUS_R*Math.sin(STOP_ANGLE)]; }
+function busRemoveRec(rec){ const i=interactables.indexOf(rec); if(i>=0) interactables.splice(i,1); if(near===rec) near=null; }
+function busAddRec(rec){ if(interactables.indexOf(rec)<0) interactables.push(rec); }
+function busAtStop(){ const b=modernBus; const sp=busStopPos();
+  if(b.passenger){ const n=b.passenger; n.onBus=false; n.rec.g.visible=true; n.rec.g.position.set(sp[0],0,sp[1]); n.tx=sp[0]; n.tz=sp[1]; n.pause=0.6; busAddRec(n.rec); b.passenger=null; }   // yolcu iner
+  else { const c=npcWander.find(n=>n.rec&&n.rec.modern==='komsu'&&!n.onBus&&!n.congT&&n.rec.g.visible&&Math.hypot(n.rec.g.position.x-sp[0],n.rec.g.position.z-sp[1])<7);
+    if(c){ c.onBus=true; c.rec.g.visible=false; busRemoveRec(c.rec); b.passenger=c; } }   // durağa yakın komşu biner
+}
+function busTick(dt){ const b=modernBus; if(!b) return; const ox=MODERN_ORIGIN[0], oz=MODERN_ORIGIN[2];
+  if(b.state==='dwell'){ b.dwellT-=dt; if(b.dwellT<=0){ b.state='run'; b.theta+=0.03; } }
+  else { b.theta+=BUS_SPEED*dt; if(b.theta>Math.PI*2) b.theta-=Math.PI*2;
+    const phase=((b.theta-STOP_ANGLE)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+    if(b.armed && phase<0.10){ b.state='dwell'; b.dwellT=DWELL; b.armed=false; b.theta=STOP_ANGLE; busAtStop(); }
+    if(phase>Math.PI) b.armed=true;   // ring'in yarısını geçince tekrar durmaya hazır
+  }
+  const x=ox+BUS_R*Math.cos(b.theta), z=oz+BUS_R*Math.sin(b.theta); b.g.position.set(x,0,z); b.g.rotation.y=-b.theta+Math.PI/2;   // teğet (hareket yönü)
+  if(b.passenger) b.passenger.rec.g.position.set(x,0,z);   // yolcu otobüsle taşınır (gizli)
+}
 function enterModern(){
   if(!S.modernUnlocked){ toast(tU('mo_lock')||'🔒 Önce Hac\'cı tamamla — sonra bugüne dönersin'); return; }
   buildModern(); if(!player) return;
@@ -3074,6 +3105,7 @@ function enterModern(){
   camera.position.copy(player.position).add(CAM_OFF); wake(); hacFade();
   banner('🏙️ '+(tU('mo_enter')||'İhya — Bugün: şehrine döndün')); updateModernBtn();
   spawnModernNeighbors();   // meydanda dolaşan komşular (selâmlaşma)
+  buildBus();   // şehir çevresinde dolaşan gerçek otobüs (durakta durur, komşular biner)
   spawnModernWallet();   // modern olay: cooldown geçtiyse cüzdan belirir
   if(!S.modernJobAsked) setTimeout(openJobAsk, 900);
 }
@@ -3716,6 +3748,7 @@ function updateNpcs(dt){
   tickShakes(dt);
   for(const n of npcWander){
     const rec=n.rec, g=rec.g; const foff=NPC_FACE[n.model||rec.def.model]||0;
+    if(n.onBus){ continue; }   // otobüse bindi → gizli, konumu busTick yönetir (dolaşma yok)
     // SOKAKTA CEMAAT: cemaat olan komşu → safa yürü, sonra kıbleye dönüp namaz pozu (sınır-clamp'ten ÖNCE, saf bozulmasın)
     if(n.congT>0){ n.congT-=dt; const et=clock.elapsedTime, sp=n.congSpot||[g.position.x,g.position.z];
       const dx=sp[0]-g.position.x, dz=sp[1]-g.position.z, d=Math.hypot(dx,dz);
@@ -6336,6 +6369,7 @@ function tick(){
     if(dbg) dbg.style.display='none';
   }
   if(npcWander.length) updateNpcs(dt);
+  if(modernBus) busTick(dt);   // şehir otobüsü ring rotada dolaşır + durakta durur
   updateSceneAmbient(dt);
   updateNeeds(dt);
   // ilim meclisi gölgeliği: oyuncu altına girince saydamlaş (altı görünsün)
@@ -6507,6 +6541,7 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
     enterMosque:()=>enterMosque(), exitMosque:()=>exitMosque(), mosqueAct:(k)=>window.__mosqueAct(k),
     enterHac:(full)=>enterHac(full), exitHac:()=>exitHac(), hacAct:(k)=>window.__hacAct(k), hacState:()=>({mode:hacMode, ...hacState}), startFullHajj:()=>startFullHajj(), openHacReg:()=>openHacReg(), hajjReg:()=>S.hajjReg,
     enterModern:()=>enterModern(), exitModern:()=>exitModern(), unlockModern:()=>{ S.modernUnlocked=true; save(); updateModernBtn(); return true; }, modernState:()=>({unlocked:S.modernUnlocked, inModern, built:modernBuilt, job:S.modernJob, recs:modernRecs.map(r=>r.modern)}), openModern:(k)=>{ const r=modernRecs.find(x=>x.modern===k); if(r) openModernBuilding(r); return !!r; },
+    busState:()=>modernBus?{theta:+modernBus.theta.toFixed(2), state:modernBus.state, pos:[Math.round(modernBus.g.position.x),Math.round(modernBus.g.position.z)], passenger:!!modernBus.passenger}:null,
     mosqueState:()=>({mode:mosqueMode, cumaDone:S.cumaDone, sat:S.mosqueSat, interiorNodes:mosqueGroup?mosqueGroup.children.length:0}),
     mosqueWeek:()=>({vDay:S.mosqueVDay, vSet:S.mosqueVSet.slice(), streak:S.mosqueStreak, streakDay:S.mosqueStreakDay, unlocked:S.mosqueUnlocked}),
     imamState:()=>({consec:S.mosqueConsec, mark:S.mosqueConsecMark, met:S.imamMet, ready:(!S.imamMet&&S.mosqueConsec>=5)}),
