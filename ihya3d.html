@@ -9,6 +9,19 @@
   gtag('js', new Date());
   gtag('config', 'G-C6W9ZSS95L');
 </script>
+<!-- Sentry hata takibi (Faz 6.29) — self-host (vendor/sentry.min.js @8.42.0).
+     DSN'i sentry.io projenden al ve aşağıdaki __SENTRY_DSN__'e yapıştır. DSN BOŞKEN tamamen KAPALI (sıfır maliyet, hiç yükleme yok).
+     DSN gizli DEĞİL (herkese açık ingest anahtarı) — client'ta durabilir. -->
+<script>
+  window.__SENTRY_DSN__ = '';   // ← BURAYA Sentry DSN (ör. https://abc123@o0.ingest.sentry.io/0)
+  if (window.__SENTRY_DSN__) {
+    var _s=document.createElement('script'); _s.src='vendor/sentry.min.js';
+    _s.onload=function(){ try{ window.Sentry && window.Sentry.init({
+      dsn: window.__SENTRY_DSN__, release: 'ihya', environment: 'production',
+      sampleRate: 1.0, ignoreErrors: ['ResizeObserver loop'] }); }catch(e){} };
+    document.head.appendChild(_s);
+  }
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#2f8f63">
@@ -433,7 +446,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.28</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.29</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>

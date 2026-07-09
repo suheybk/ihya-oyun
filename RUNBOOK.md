@@ -59,6 +59,19 @@ node .github/scripts/check-module.mjs
 
 ---
 
+## 6. İzleme (Monitoring) — kurulum
+
+**Hata takibi (Sentry) — aktivasyon (kod hazır, DSN gerekli):**
+1. [sentry.io](https://sentry.io) → ücretsiz hesap → yeni proje (**Platform: Browser / JavaScript**).
+2. Projenin **DSN**'ini kopyala (ör. `https://abc123@o0.ingest.sentry.io/0`) — bu gizli değil, herkese açık ingest anahtarıdır.
+3. `ihya3d.html` içinde `<head>`'deki `window.__SENTRY_DSN__ = ''` satırına DSN'i yapıştır.
+4. `sw.js` `CACHE` sürümünü artır + 3 remote'a push. DSN dolunca `vendor/sentry.min.js` (@8.42.0, self-host) yüklenir ve hatalar Sentry'ye düşer. **DSN boşken tamamen kapalıdır (sıfır maliyet).**
+
+**Uptime izleme (UptimeRobot) — hesap + panel (kod gerektirmez):**
+1. [uptimerobot.com](https://uptimerobot.com) → ücretsiz hesap.
+2. **Add New Monitor** → HTTP(s) → URL: canlı site (ör. `https://suheybk.github.io/ihya-medine/`) → kontrol aralığı 5 dk.
+3. Alert Contacts: e-posta (suheybk@gmail.com) ekle. Site düşerse bildirim gelir.
+
 ## İletişim / kaynaklar
 - Sahibi: Suheyb Karaman · suheybk@gmail.com
 - Repo aynaları: origin (suheybk/ihya), live (ihya-oyun), live2 (ihya-medine)
