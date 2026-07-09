@@ -318,9 +318,17 @@
   #endscreen button{padding:15px;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer}
   #endscreen .cont{background:linear-gradient(135deg,#5fb98a,#2f8f63);color:#fff;box-shadow:0 8px 22px #2f8f6340}
   #endscreen .restart{background:#15291f;color:#eaf3ea;border:1px solid #2c5142}
-  #load{position:fixed;inset:0;display:grid;place-items:center;background:#bfe3f0;z-index:40;color:#1d3a2f;font-weight:800;font-size:16px}
-  #load .bar{position:absolute;bottom:38%;width:180px;height:8px;background:#ffffff66;border-radius:6px;overflow:hidden}
-  #load .bar i{display:block;height:100%;width:0;background:#2f8f63;transition:width .2s}
+  /* Yükleme ekranı: dil-seçme (intro) ile AYNI koyu-yeşil ton; yumuşakça sönerek geçer */
+  #load{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+    background:radial-gradient(120% 90% at 50% 20%, #14342a 0%, #0a1a15 60%, #050b09 100%);
+    z-index:70;color:#eaf3ec;font-weight:800;font-size:15px;letter-spacing:.04em;
+    transition:opacity .8s ease}
+  #load.fade{opacity:0;pointer-events:none}
+  #load .loadTitle{font-size:clamp(46px,13vw,88px);font-weight:900;letter-spacing:.02em;line-height:1;color:#8fce58;text-shadow:0 2px 30px rgba(143,206,88,.35);animation:loadPulse 2.4s ease-in-out infinite}
+  @keyframes loadPulse{0%,100%{opacity:.86;text-shadow:0 2px 26px rgba(143,206,88,.30)}50%{opacity:1;text-shadow:0 2px 38px rgba(143,206,88,.55)}}
+  #load .loadTxt{opacity:.78;letter-spacing:.06em;margin-top:-6px}
+  #load .bar{position:relative;width:180px;height:8px;background:#ffffff22;border-radius:6px;overflow:hidden}
+  #load .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f8f63,#8fce58);border-radius:6px;transition:width .3s}
 </style>
 <script type="importmap">
 { "imports": {
@@ -335,7 +343,7 @@
 
 <!-- ============ INTRO: dil seçimi + kontrol ipucu + sinematik ============ -->
 <style>
-  body.intro > *:not(#c):not(#introRoot){ display:none !important; }   /* intro'da tüm HUD gizli */
+  body.intro > *:not(#c):not(#introRoot):not(#load){ display:none !important; }   /* intro'da tüm HUD gizli (#load hariç: dil-seçme üstüne sönerek geçer) */
   #introRoot{ position:fixed; inset:0; z-index:60; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; }
   .introScreen{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px;
     background:radial-gradient(120% 90% at 50% 20%, #14342a 0%, #0a1a15 60%, #050b09 100%); color:#eaf3ec; text-align:center; padding:24px; }
@@ -476,7 +484,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.47</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.48</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -674,7 +682,7 @@
     <button class="restart" id="endRestart">↺ Baştan Başla</button>
   </div>
 </div>
-<div id="load"><span data-i18n="load_txt">Dünya diriltiliyor…</span><div class="bar"><i id="loadBar"></i></div></div>
+<div id="load"><div class="loadTitle">İhya</div><span class="loadTxt" data-i18n="load_txt">Dünya diriltiliyor…</span><div class="bar"><i id="loadBar"></i></div></div>
 
 <!--EMBEDDED_WORLD_MODELS--><script>
 window.IHYA_WORLD = {
@@ -6565,10 +6573,11 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
   buildGuideBeacon();   // sıradaki hedefe rehber ışığı
   updateSeccadeBtn(); checkZekat(); updateWoolHint(); updateFastBtn(); updateAdaletHud();
   if(S.laidSeccade) placeLaidSeccade(S.laidSeccade.x, S.laidSeccade.z, S.laidSeccade.ry, false);  // önceki serili seccade yerinde kalsın
-  document.getElementById('load').style.display='none';
   applyLang();   // kayıtlı dil varsa uygula
   if(!S.introDone){ startIntro(); }   // ilk açılış: dil seçimi + sinematik uyanış (HUD gizli)
   else if(S.startInModern && S.modernUnlocked){ setTimeout(()=>{ if(!inModern && typeof enterModern==='function') enterModern(); }, 500); }   // SEVİYE 2: Hac sonrası oyun modern şehirde başlar (🕌 ile Medine'ye dönülebilir)
+  { const _ld=document.getElementById('load');   // yükleme ekranı ARTIK dil-seçme/oyun üstüne YUMUŞAKÇA söner (ani kesme yok)
+    if(_ld){ if(loadBar) loadBar.style.width='100%'; requestAnimationFrame(()=>_ld.classList.add('fade')); setTimeout(()=>{ _ld.style.display='none'; }, 900); } }
   // yeni gün artık gün/gece döngüsü tamamlanınca (updateDayNight → onNewDay) olur
   setInterval(updateGatherRegrow, 3000);   // hasat ağaçları yeniden verir
   window.__ihya3d={S, applyLang:()=>applyLang(), interactables, player:()=>player, move:(x,z)=>{jVec.x=x;jVec.y=z;},
