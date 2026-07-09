@@ -106,6 +106,17 @@
   .vzrow.done .vzst{background:#dff0e4;color:#2f7a53}
   .vzrow.lock{opacity:.5}
   .vzrow.lock .vzst{background:#ececec;color:#8a8a8a}
+  .hrfield{margin:10px 0}
+  .hrfield label{display:block;font-size:12px;font-weight:800;color:var(--muted);margin-bottom:4px}
+  .hrfield input{width:100%;padding:10px 12px;border:1px solid #d8e2da;border-radius:10px;font-size:15px;box-sizing:border-box;background:#fff;color:#1c2b22}
+  .hrgender{display:flex;gap:8px}
+  .hrgender button{flex:1;padding:9px;border:1px solid #d8e2da;border-radius:10px;background:#fff;font-weight:700;cursor:pointer;color:#1c2b22}
+  .hrgender button.sel{background:linear-gradient(135deg,#5fb98a,#2f8f63);color:#fff;border-color:#2f8f63}
+  .hrconsent{display:flex;gap:8px;align-items:flex-start;font-size:12px;margin:12px 0;color:var(--muted);line-height:1.45}
+  .hrconsent input{margin-top:2px;flex:0 0 auto}
+  .hrerr{color:#c0341f;font-size:12.5px;font-weight:700;min-height:1.1em;margin:2px 0 6px}
+  .hrnote{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0}
+  .hrpay{background:#f3f7f3;border:1px solid #e3ece5;border-radius:13px;padding:12px 13px;margin:10px 0}
   #dgoal{width:100%;background:var(--panel);border-radius:14px;padding:8px 10px 8px;box-shadow:0 4px 14px #0002;pointer-events:auto}
   .dgrow{display:flex;align-items:center;gap:7px;padding:3px 1px 5px;font-size:12.5px;font-weight:700}
   .dgrow.dgdone{opacity:.6}
@@ -420,7 +431,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.24</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.25</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -571,6 +582,13 @@
   </div>
 </div>
 
+<div class="veil" id="hacReg">
+  <div class="sheet">
+    <div class="grip"></div>
+    <div id="hacRegBody"></div>
+  </div>
+</div>
+
 <div class="veil" id="dlg">
   <div class="sheet">
     <div class="grip"></div>
@@ -603,10 +621,10 @@
 
   <div class="sec"><h3>İletişim</h3><p><a href="mailto:suheybk@gmail.com">suheybk@gmail.com</a></p></div>
 
-  <div class="sec"><h3>Hac Yolculuğu</h3><p id="endHajjNote">Dünyayı ihyâ ettin; şimdi imkânın da var. Kesb-i helâlinden <b id="endHajjFee">300</b> 💰 ücret ödeyip <b>Hacca</b> niyet et — Arafat'ta vakfe, Müzdelife, şeytan taşlama, kurban, tavâf ve sa'y. «Ona bir yol bulabilenlerin Beyt'i haccetmesi Allah'ın insanlar üzerindeki hakkıdır.» (Âl-i İmrân 3/97)</p></div>
+  <div class="sec"><h3>Hac Yolculuğu</h3><p id="endHajjNote">Dünyayı ihyâ ettin; şimdi <b>Hacca</b> niyet et — Arafat'ta vakfe, Müzdelife, şeytan taşlama, kurban, tavâf ve sa'y. Kısa bir başvuru (ad, yaş, cinsiyet, e-posta) alınır; yetişkinler güvenli ödemeyle yolculuğa başlar. «Ona bir yol bulabilenlerin Beyt'i haccetmesi Allah'ın insanlar üzerindeki hakkıdır.» (Âl-i İmrân 3/97)</p></div>
 
   <div class="btns">
-    <button class="cont" id="endHajj" style="background:linear-gradient(135deg,#d9b25a,#a8842f)">🕋 Ücret öde, Hacca git</button>
+    <button class="cont" id="endHajj" style="background:linear-gradient(135deg,#d9b25a,#a8842f)">🕋 Hacca Git</button>
     <button class="cont" id="endCont">İhya Etmeye Devam Et ➤</button>
     <button class="restart" id="endRestart">↺ Baştan Başla</button>
   </div>
@@ -1340,6 +1358,13 @@ const UI_STR={ en:{
   hj_done_banner:'🕋 A blessed Hajj — Hajj accepted', hj_done_toast:'«Whoever performs Hajj for Allah and commits no obscenity or sin returns as the day his mother bore him (free of sin).» (Bukhari)',
   hj_fee_need:'Not enough dirhams for Hajj — needed: ',
   end_rank:'Rank: ', end_nur:'Nur: ', end_dirhem:'Purse: ', end_streak:'Steadfastness: ', end_days:'days', end_hajj:'Hajj',
+  hf_title:'Hajj Registration', hf_sub:'A little information for the journey. No membership needed.',
+  hf_name:'Full name', hf_age:'Age', hf_gender:'Gender', hf_male:'Male', hf_female:'Female', hf_email:'Email',
+  hf_consent:'I agree to my information being processed for the Hajj registration and contact.',
+  hf_continue:'Continue ➤', hf_close:'Cancel', hf_ok:'Understood',
+  hf_e_name:'Please enter your name.', hf_e_age:'Enter a valid age.', hf_e_gender:'Select a gender.', hf_e_email:'Enter a valid email.', hf_e_consent:'Please check the consent box to continue.',
+  hf_pay_title:'Secure Payment', hf_pay_desc:'The Hajj journey contribution is taken via secure payment (iyzico). Your card details are not saved in this game; payment is made on the provider\'s secure page.', hf_pay_seam:'The payment system (iyzico) will be added on the server side. For now the Hajj begins with a test pass.', hf_pay_btn:'Proceed to Payment and Begin Hajj', hf_pay_soon:'Payment (iyzico) will be added via the server — a test pass for now',
+  hf_minor_title:'Guardian Consent Required', hf_minor_desc:'Because you are under 18, the Hajj payment and journey must be done with a <b>guardian\'s consent</b>. Your details are saved; you may continue together with an adult.',
   // --- Faz 3: NPC ikram ---
   npc_cd_a:'🙏 You just gave — try again in ', npc_cd_b:' s', npc_food:'food',
   npc_need_a:'🔒 First gather ', npc_need_b:' (', npc_need_c:' needed', npc_need_food:'; dates/mulberries/milk',
@@ -1451,6 +1476,13 @@ ar:{
   hj_done_banner:'🕋 حجٌّ مبرور — تقبّل الله', hj_done_toast:'«من حجَّ لله فلم يرفُث ولم يفسُق رجع كيومَ ولدته أمُّه.» (البخاري)',
   hj_fee_need:'لا دراهم كافية للحجّ — يلزم: ',
   end_rank:'الرتبة: ', end_nur:'النور: ', end_dirhem:'الكيس: ', end_streak:'الاستقامة: ', end_days:'يوم', end_hajj:'حجّ',
+  hf_title:'التسجيل للحجّ', hf_sub:'معلوماتٌ يسيرة للرحلة. لا حاجة للعضوية.',
+  hf_name:'الاسم الكامل', hf_age:'العمر', hf_gender:'الجنس', hf_male:'ذكر', hf_female:'أنثى', hf_email:'البريد الإلكتروني',
+  hf_consent:'أوافق على معالجة بياناتي لأجل التسجيل للحجّ والتواصل.',
+  hf_continue:'متابعة ➤', hf_close:'إلغاء', hf_ok:'فهمت',
+  hf_e_name:'اكتب اسمك من فضلك.', hf_e_age:'أدخِل عمرًا صحيحًا.', hf_e_gender:'اختر الجنس.', hf_e_email:'أدخِل بريدًا صحيحًا.', hf_e_consent:'ضع علامة الموافقة للمتابعة.',
+  hf_pay_title:'دفعٌ آمن', hf_pay_desc:'تُؤخَذ مساهمةُ رحلة الحجّ عبر دفعٍ آمن (iyzico). لا تُحفَظ بيانات بطاقتك في اللعبة؛ يتمّ الدفع على صفحة المزوّد الآمنة.', hf_pay_seam:'ستُضاف بوابةُ الدفع (iyzico) في الخادم. مؤقتًا يبدأ الحجّ بتمريرٍ تجريبي.', hf_pay_btn:'انتقِل إلى الدفع وابدأ الحجّ', hf_pay_soon:'ستُضاف بوابةُ الدفع (iyzico) عبر الخادم — تمريرٌ تجريبي الآن',
+  hf_minor_title:'يلزم إذنُ الوليّ', hf_minor_desc:'لأنك دون الثامنة عشرة، يجب أن يكون دفعُ الحجّ ورحلتُه بإذن <b>وليّك</b>. حُفِظت بياناتك؛ يمكنك المتابعة مع شخصٍ بالغ.',
   load_txt:'إحياء العالم…',
   // panel gövdeleri (Dağarcık/Pazar/Senaryo) + ortak UI
   iv_carry:'الحمل', iv_nobag:' · لا جَعبة', iv_full:'ممتلئة',
@@ -4965,14 +4997,71 @@ function showEnd(){
   const fee=document.getElementById('endHajjFee'); if(fee) fee.textContent=HAJJ_FEE;
   document.getElementById('endscreen').classList.add('show');
 }
-function startFullHajj(){
-  if((S.dirhem||0)<HAJJ_FEE){ toast('🔒 '+(tU('hj_fee_need')||'Hac için yeterli dirhem yok — gerekli: ')+HAJJ_FEE+' 💰'); return; }
-  S.dirhem-=HAJJ_FEE; save(); refreshHUD();
+/* ---- HAC BAŞVURU + ÖDEME (Faz 6.25): oyun bitince ad/yaş/cinsiyet/e-posta al → yetişkinse ödeme (iyzico seam) → Hac.
+   NOT: gerçek ödeme (iyzico) ve sonrasındaki login sistemi BACKEND gerektirir (gizli anahtar client'a konmaz);
+   burası client tarafı + ödeme "seam"idir. Üyelik başvuru öncesi gerekmez. ---- */
+let hacRegStep='form', hacRegSel={};
+function openHacReg(){ hacRegStep='form'; hacRegSel={gender:(S.hajjReg&&S.hajjReg.gender)||null};
   document.getElementById('endscreen').classList.remove('show');
-  setTimeout(()=>enterHac(true), 250);   // girdap → tam Hac menâsiki
+  renderHacReg(); document.getElementById('hacReg').classList.add('show'); }
+function closeHacReg(){ document.getElementById('hacReg').classList.remove('show'); }
+function hacGender(g){ hacRegSel.gender=g; document.querySelectorAll('#hacReg .hrgender button').forEach(b=>b.classList.toggle('sel', b.dataset.g===g)); const e=document.getElementById('hrErr'); if(e) e.textContent=''; }
+function renderHacReg(){
+  const b=document.getElementById('hacRegBody'); if(!b) return; const R=S.hajjReg||{};
+  if(hacRegStep==='pay'){
+    b.innerHTML='<h3 style="text-align:center;margin:2px 0 8px">🔒 '+(tU('hf_pay_title')||'Güvenli Ödeme')+'</h3>'
+      +'<div class="hrpay"><b>'+(R.name||'')+'</b> · '+(R.age||'')+' · '+((R.gender==='kadin')?(tU('hf_female')||'Kadın'):(tU('hf_male')||'Erkek'))+'<br><span class="hrnote">'+(tU('hf_pay_desc')||'Hac yolculuğu katkı payı, güvenli ödeme (iyzico) ile alınır. Kart bilgilerin bu oyuna kaydedilmez; ödeme sağlayıcının güvenli sayfasında yapılır.')+'</span></div>'
+      +'<div class="hrnote">⚠️ '+(tU('hf_pay_seam')||'Ödeme altyapısı (iyzico) sunucu tarafında eklenecek. Şimdilik test geçişiyle Hac başlar.')+'</div>'
+      +'<button class="do" onclick="beginHajjPayment()">💳 '+(tU('hf_pay_btn')||'Ödemeye Geç ve Hacca Başla')+'</button>'
+      +'<button class="cl" onclick="closeHacReg()">'+(tU('hf_close')||'Vazgeç')+'</button>';
+    return;
+  }
+  if(hacRegStep==='underage'){
+    b.innerHTML='<h3 style="text-align:center;margin:2px 0 8px">👨‍👩‍👧 '+(tU('hf_minor_title')||'Veli Onayı Gerekir')+'</h3>'
+      +'<div class="hrnote" style="text-align:center">'+(tU('hf_minor_desc')||'18 yaşından küçük olduğun için Hac ödemesi ve yolculuğu bir <b>velinin onayı</b> ile yapılmalıdır. Bilgilerin kaydedildi; bir büyüğünle birlikte devam edebilirsin.')+'</div>'
+      +'<button class="do" onclick="closeHacReg()">'+(tU('hf_ok')||'Anladım')+'</button>';
+    return;
+  }
+  // form
+  const gm=(g,l)=>'<button type="button" data-g="'+g+'" class="'+(hacRegSel.gender===g?'sel':'')+'" onclick="hacGender(\''+g+'\')">'+l+'</button>';
+  b.innerHTML='<h3 style="text-align:center;margin:2px 0 4px">🕋 '+(tU('hf_title')||'Hac Başvurusu')+'</h3>'
+    +'<div class="sub" style="text-align:center;margin-bottom:10px">'+(tU('hf_sub')||'Yolculuk için kısa bilgi. Üyelik gerekmez.')+'</div>'
+    +'<div class="hrfield"><label>'+(tU('hf_name')||'Ad Soyad')+'</label><input id="hrName" type="text" autocomplete="name" value="'+(R.name||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<div class="hrfield"><label>'+(tU('hf_age')||'Yaş')+'</label><input id="hrAge" type="number" inputmode="numeric" min="1" max="120" value="'+(R.age||'')+'"></div>'
+    +'<div class="hrfield"><label>'+(tU('hf_gender')||'Cinsiyet')+'</label><div class="hrgender">'+gm('erkek',tU('hf_male')||'Erkek')+gm('kadin',tU('hf_female')||'Kadın')+'</div></div>'
+    +'<div class="hrfield"><label>'+(tU('hf_email')||'E-posta')+'</label><input id="hrEmail" type="email" inputmode="email" autocomplete="email" value="'+(R.email||'').replace(/"/g,'&quot;')+'"></div>'
+    +'<label class="hrconsent"><input id="hrConsent" type="checkbox"><span>'+(tU('hf_consent')||'Bilgilerimin Hac başvurusu ve iletişim için işlenmesini kabul ediyorum (KVKK/açık rıza).')+'</span></label>'
+    +'<div class="hrerr" id="hrErr"></div>'
+    +'<button class="do" onclick="submitHacForm()">'+(tU('hf_continue')||'Devam ➤')+'</button>'
+    +'<button class="cl" onclick="closeHacReg()">'+(tU('hf_close')||'Vazgeç')+'</button>';
+}
+function submitHacForm(){
+  const name=(document.getElementById('hrName').value||'').trim();
+  const age=parseInt(document.getElementById('hrAge').value,10);
+  const email=(document.getElementById('hrEmail').value||'').trim();
+  const g=hacRegSel.gender, consent=document.getElementById('hrConsent').checked;
+  const err=document.getElementById('hrErr');
+  if(name.length<2){ err.textContent=tU('hf_e_name')||'Lütfen adını yaz.'; return; }
+  if(!(age>=1&&age<=120)){ err.textContent=tU('hf_e_age')||'Geçerli bir yaş gir.'; return; }
+  if(!g){ err.textContent=tU('hf_e_gender')||'Cinsiyet seç.'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent=tU('hf_e_email')||'Geçerli bir e-posta gir.'; return; }
+  if(!consent){ err.textContent=tU('hf_e_consent')||'Devam için onay kutusunu işaretle.'; return; }
+  S.hajjReg={name, age, gender:g, email, consent:true}; save();   // KALICI (local); login/backend gelince sunucuya gönderilecek
+  hacRegStep=(age>=18)?'pay':'underage'; renderHacReg();
+}
+window.openHacReg=openHacReg; window.closeHacReg=closeHacReg; window.hacGender=hacGender; window.submitHacForm=submitHacForm; window.beginHajjPayment=beginHajjPayment;   // inline onclick global scope → window'a bağla
+function beginHajjPayment(){
+  // ⚠️ ÖDEME SEAM — gerçek iyzico ödemesi BURADA backend ile başlatılır:
+  //   sunucu (secret key ile) iyzico Checkout Form oturumu açar → başarılı callback → Hac başlar.
+  // Backend/secret client'ta OLAMAZ. Backend hazır olana dek: test geçişiyle Hac'ı başlat.
+  if(S.hajjReg){ S.hajjReg.paid=true; save(); }
+  closeHacReg();
+  banner('🔒 '+(tU('hf_pay_soon')||'Ödeme (iyzico) sunucu ile eklenecek — şimdilik test geçişi'));
+  setTimeout(()=>enterHac(true), 300);   // girdap → tam Hac menâsiki
 }
 document.getElementById('endCont').onclick=()=>{ if(!S.profile.set){ openProfile(); } else { document.getElementById('endscreen').classList.remove('show'); } };
-document.getElementById('endHajj').onclick=startFullHajj;
+document.getElementById('endHajj').onclick=openHacReg;
+document.getElementById('hacReg').addEventListener('click',e=>{ if(e.target.id==='hacReg') closeHacReg(); });
 document.getElementById('profStart').onclick=startProfile;
 document.getElementById('profile').addEventListener('click',e=>{ if(e.target.id==='profile') document.getElementById('profile').classList.remove('show'); });
 document.getElementById('endRestart').onclick=()=>{ localStorage.removeItem('ihya3d_v1'); location.reload(); };
@@ -6001,7 +6090,7 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
     sell:(k,all)=>sellGood(k,all), dirhem:()=>S.dirhem||0, prices:()=>PRICES,
     marketBuilt:()=>!!marketRec,
     enterMosque:()=>enterMosque(), exitMosque:()=>exitMosque(), mosqueAct:(k)=>window.__mosqueAct(k),
-    enterHac:(full)=>enterHac(full), exitHac:()=>exitHac(), hacAct:(k)=>window.__hacAct(k), hacState:()=>({mode:hacMode, ...hacState}), startFullHajj:()=>startFullHajj(),
+    enterHac:(full)=>enterHac(full), exitHac:()=>exitHac(), hacAct:(k)=>window.__hacAct(k), hacState:()=>({mode:hacMode, ...hacState}), startFullHajj:()=>startFullHajj(), openHacReg:()=>openHacReg(), hajjReg:()=>S.hajjReg,
     mosqueState:()=>({mode:mosqueMode, cumaDone:S.cumaDone, sat:S.mosqueSat, interiorNodes:mosqueGroup?mosqueGroup.children.length:0}),
     mosqueWeek:()=>({vDay:S.mosqueVDay, vSet:S.mosqueVSet.slice(), streak:S.mosqueStreak, streakDay:S.mosqueStreakDay, unlocked:S.mosqueUnlocked}),
     imamState:()=>({consec:S.mosqueConsec, mark:S.mosqueConsecMark, met:S.imamMet, ready:(!S.imamMet&&S.mosqueConsec>=5)}),
