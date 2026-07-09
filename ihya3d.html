@@ -432,7 +432,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.26</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.27</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -620,7 +620,7 @@
 
   <div class="sec"><h3>Yapanlar</h3><p>Suheyb Karaman &amp; İhya Ekibi</p></div>
 
-  <div class="sec"><h3>İletişim</h3><p><a href="mailto:suheybk@gmail.com">suheybk@gmail.com</a></p></div>
+  <div class="sec"><h3>İletişim</h3><p><a href="mailto:suheybk@gmail.com">suheybk@gmail.com</a> · <a href="privacy.html" target="_blank" rel="noopener">Gizlilik Politikası</a> · <a href="terms.html" target="_blank" rel="noopener">Kullanım Koşulları</a></p></div>
 
   <div class="sec"><h3>Hac Yolculuğu</h3><p id="endHajjNote">Dünyayı ihyâ ettin; şimdi <b>Hacca</b> niyet et — Arafat'ta vakfe, Müzdelife, şeytan taşlama, kurban, tavâf ve sa'y. Kısa bir başvuru (ad, yaş, cinsiyet, e-posta) alınır; yetişkinler güvenli ödemeyle yolculuğa başlar. «Ona bir yol bulabilenlerin Beyt'i haccetmesi Allah'ın insanlar üzerindeki hakkıdır.» (Âl-i İmrân 3/97)</p></div>
 
@@ -1366,6 +1366,7 @@ const UI_STR={ en:{
   hf_e_name:'Please enter your name.', hf_e_age:'Enter a valid age.', hf_e_gender:'Select a gender.', hf_e_email:'Enter a valid email.', hf_e_consent:'Please check the consent box to continue.',
   hf_pay_title:'Secure Payment', hf_pay_desc:'The Hajj journey contribution is taken via secure payment (iyzico). Your card details are not saved in this game; payment is made on the provider\'s secure page.', hf_pay_seam:'The payment system (iyzico) will be added on the server side. For now the Hajj begins with a test pass.', hf_pay_btn:'Proceed to Payment and Begin Hajj', hf_pay_soon:'Payment (iyzico) will be added via the server — a test pass for now',
   hf_minor_title:'Guardian Consent Required', hf_minor_desc:'Because you are under 18, the Hajj payment and journey must be done with a <b>guardian\'s consent</b>. Your details are saved; you may continue together with an adult.',
+  hf_privacy:'Privacy Policy', hf_terms:'Terms of Use',
   // --- Faz 3: NPC ikram ---
   npc_cd_a:'🙏 You just gave — try again in ', npc_cd_b:' s', npc_food:'food',
   npc_need_a:'🔒 First gather ', npc_need_b:' (', npc_need_c:' needed', npc_need_food:'; dates/mulberries/milk',
@@ -1484,6 +1485,7 @@ ar:{
   hf_e_name:'اكتب اسمك من فضلك.', hf_e_age:'أدخِل عمرًا صحيحًا.', hf_e_gender:'اختر الجنس.', hf_e_email:'أدخِل بريدًا صحيحًا.', hf_e_consent:'ضع علامة الموافقة للمتابعة.',
   hf_pay_title:'دفعٌ آمن', hf_pay_desc:'تُؤخَذ مساهمةُ رحلة الحجّ عبر دفعٍ آمن (iyzico). لا تُحفَظ بيانات بطاقتك في اللعبة؛ يتمّ الدفع على صفحة المزوّد الآمنة.', hf_pay_seam:'ستُضاف بوابةُ الدفع (iyzico) في الخادم. مؤقتًا يبدأ الحجّ بتمريرٍ تجريبي.', hf_pay_btn:'انتقِل إلى الدفع وابدأ الحجّ', hf_pay_soon:'ستُضاف بوابةُ الدفع (iyzico) عبر الخادم — تمريرٌ تجريبي الآن',
   hf_minor_title:'يلزم إذنُ الوليّ', hf_minor_desc:'لأنك دون الثامنة عشرة، يجب أن يكون دفعُ الحجّ ورحلتُه بإذن <b>وليّك</b>. حُفِظت بياناتك؛ يمكنك المتابعة مع شخصٍ بالغ.',
+  hf_privacy:'سياسة الخصوصية', hf_terms:'شروط الاستخدام',
   load_txt:'إحياء العالم…',
   // panel gövdeleri (Dağarcık/Pazar/Senaryo) + ortak UI
   iv_carry:'الحمل', iv_nobag:' · لا جَعبة', iv_full:'ممتلئة',
@@ -5027,6 +5029,7 @@ function renderHacReg(){
     +'<div class="hrfield"><label>'+(tU('hf_gender')||'Cinsiyet')+'</label><div class="hrgender">'+gm('erkek',tU('hf_male')||'Erkek')+gm('kadin',tU('hf_female')||'Kadın')+'</div></div>'
     +'<div class="hrfield"><label>'+(tU('hf_email')||'E-posta')+'</label><input id="hrEmail" type="email" inputmode="email" autocomplete="email" value="'+(R.email||'').replace(/"/g,'&quot;')+'"></div>'
     +'<label class="hrconsent"><input id="hrConsent" type="checkbox"><span>'+(tU('hf_consent')||'Bilgilerimin Hac başvurusu ve iletişim için işlenmesini kabul ediyorum (KVKK/açık rıza).')+'</span></label>'
+    +'<div class="hrnote" style="margin-top:-4px"><a href="privacy.html" target="_blank" rel="noopener">'+(tU('hf_privacy')||'Gizlilik Politikası')+'</a> · <a href="terms.html" target="_blank" rel="noopener">'+(tU('hf_terms')||'Kullanım Koşulları')+'</a></div>'
     +'<div class="hrerr" id="hrErr"></div>'
     +'<button class="do" onclick="submitHacForm()">'+(tU('hf_continue')||'Devam ➤')+'</button>'
     +'<button class="cl" onclick="closeHacReg()">'+(tU('hf_close')||'Vazgeç')+'</button>';
