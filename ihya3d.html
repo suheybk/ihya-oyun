@@ -329,6 +329,27 @@
   #load .loadTxt{opacity:.78;letter-spacing:.06em;margin-top:-6px}
   #load .bar{position:relative;width:180px;height:8px;background:#ffffff22;border-radius:6px;overflow:hidden}
   #load .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f8f63,#8fce58);border-radius:6px;transition:width .3s}
+  /* Bekleme animasyonu: küçük karakter harflerin ARKASINDAN/ÖNÜNDEN dolanır */
+  #load .loadLogo{position:relative;display:inline-block}
+  #load .loadLogo .ll{position:relative;z-index:2}
+  #load .loadChar{position:absolute;left:0;bottom:1%;width:0.56em;height:0.8em;z-index:5;pointer-events:none;
+    animation:charWeave 3.8s linear infinite}
+  #load .loadCharIn{display:block;width:100%;height:100%;transform-origin:50% 90%;animation:charBob .46s ease-in-out infinite}
+  #load .loadChar .ft{animation:none}
+  #load .loadChar .ft-l{animation:stepA .46s ease-in-out infinite}
+  #load .loadChar .ft-r{animation:stepB .46s ease-in-out infinite}
+  /* harf sınırları: İ 0-17% · h 17-46% · y 46-73% · a 73-100% (char merkezi sınırı geçince z değişir → geçiş harf boşluğunda) */
+  @keyframes charWeave{
+    0%{left:-16%;z-index:1}
+    14%{z-index:1} 15%{z-index:5}          /* İ ARKASI → h ÖNÜ */
+    36%{z-index:5} 37%{z-index:1}          /* h ÖNÜ → y ARKASI */
+    56%{z-index:1} 57%{z-index:5}          /* y ARKASI → a ÖNÜ */
+    100%{left:120%;z-index:5}
+  }
+  @keyframes charBob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8%) rotate(2deg)}}
+  @keyframes stepA{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.2px)}}
+  @keyframes stepB{0%,100%{transform:translateY(-2.2px)}50%{transform:translateY(0)}}
+  @media(prefers-reduced-motion:reduce){ #load .loadChar,#load .loadCharIn,#load .loadChar .ft{animation:none} #load .loadChar{left:50%;opacity:.5} }
 </style>
 <script type="importmap">
 { "imports": {
@@ -484,7 +505,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.48</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.49</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -682,7 +703,7 @@
     <button class="restart" id="endRestart">↺ Baştan Başla</button>
   </div>
 </div>
-<div id="load"><div class="loadTitle">İhya</div><span class="loadTxt" data-i18n="load_txt">Dünya diriltiliyor…</span><div class="bar"><i id="loadBar"></i></div></div>
+<div id="load"><div class="loadTitle loadLogo"><span class="ll">İ</span><span class="ll">h</span><span class="ll">y</span><span class="ll">a</span><span class="loadChar" aria-hidden="true"><span class="loadCharIn"><svg viewBox="0 0 40 58" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><ellipse class="ft ft-l" cx="15.5" cy="54" rx="5" ry="3" fill="#e08a3c"/><ellipse class="ft ft-r" cx="24.5" cy="54" rx="5" ry="3" fill="#e08a3c"/><path d="M13,28 L27,28 L31,52 L9,52 Z" fill="#d3dbe2"/><rect x="7.5" y="30" width="4" height="13" rx="2" fill="#c6cfd7"/><rect x="28.5" y="30" width="4" height="13" rx="2" fill="#c6cfd7"/><circle cx="20" cy="20" r="9" fill="#e6b98e"/><path d="M10.5,19.5 a9.5,9.5 0 0 1 19,0 z" fill="#4a9e3f"/><rect x="10.5" y="18.5" width="19" height="1.6" fill="#3c8433"/></svg></span></span></div><span class="loadTxt" data-i18n="load_txt">Dünya diriltiliyor…</span><div class="bar"><i id="loadBar"></i></div></div>
 
 <!--EMBEDDED_WORLD_MODELS--><script>
 window.IHYA_WORLD = {
