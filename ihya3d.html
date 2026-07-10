@@ -541,7 +541,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.69</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.70</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -3327,13 +3327,15 @@ ar:{
 };
 function moGym(){ const L=(S.lang==='en'||S.lang==='ar')?S.lang:'tr'; return MODERN_GYM[L]||MODERN_GYM.tr; }
 function openGym(rec){ const G=moGym(); audio();
-  const doEx=(gain,nur)=>{ if(S.gymCd&&Date.now()<S.gymCd){ toast(G.cd); return; }
-    if((S.fitness||0)>=100){ toast(G.full); return; }
+  // doEx: başarılı egzersizde motor diyaloğu kapatır (go YOK → closeDialog) → antrenman ANİMASYONU görünür (kamera actionT>0'da yakınlaşır); cooldown/full'da gym'i geri aç
+  const doEx=(gain,nur,kind)=>{ if(S.gymCd&&Date.now()<S.gymCd){ toast(G.cd); setTimeout(()=>openGym(rec),0); return; }
+    if((S.fitness||0)>=100){ toast(G.full); setTimeout(()=>openGym(rec),0); return; }
     S.fitness=Math.min(100,(S.fitness||0)+gain); addNur(nur); S.gymCd=Date.now()+GYM_CD; save(); refreshHUD(); sndChime();
+    if(typeof playAction==='function') playAction(2.6, kind);   // 🏃/🏋️/🤸 antrenman animasyonu (diyalog kapanınca sahnede görünür)
     banner('💪 '+G.ok+': '+Math.round(S.fitness)+'/100 · +'+nur+(tU('nur_suffix')||' nûr')); };
   const txt=()=>G.ex+'<br><br><b>'+G.fit+': '+Math.round(S.fitness||0)+'/100</b>';
   openDialog({ ic:'🏋️', title:G.t, start:'s0', steps:{ s0:{ who:G.who, txt:txt(), opts:[
-    { l:G.run, act:()=>doEx(14,2), go:'s0' }, { l:G.lift, act:()=>doEx(16,3), go:'s0' }, { l:G.stretch, act:()=>doEx(10,2), go:'s0' }, { l:G.bye } ] } }});
+    { l:G.run, act:()=>doEx(14,2,'run') }, { l:G.lift, act:()=>doEx(16,3,'lift') }, { l:G.stretch, act:()=>doEx(10,2,'stretch') }, { l:G.bye } ] } }});
 }
 // ---- MELEK ORDUSU (70.000 temsili) — ziyaret sonrası oyuncunun etrafında ışıklı halka ----
 let angelHost=null, hostUntil=0, hostStart=0, hostAngels=[];
@@ -6943,13 +6945,28 @@ function tick(){
         aR=-1.05+cast*0.12;                                                                          // sağ kol oltayı öne-yukarı tutar (sabit-ish)
         aL=-0.12;                                                                                     // sol kol yanda aşağıda (serbest)
         player.rotation.x += (0.07 - player.rotation.x)*0.12; }                                       // suya hafif eğik
+      else if(actionKind==='run'){                                                                   // SPOR — KOŞU: bacaklar hızlı zıt faz, kollar pompalar, öne eğik + zıplama
+        const w=Math.sin(et*11);
+        aL=-0.65+w*0.75; aR=-0.65-w*0.75;                                                             // kollar bükülü, bacaklara ZIT pompalar
+        if(PP.legL){ swingLeg(PP.legL, w*0.75); swingLeg(PP.legR, -w*0.75); }                         // bacaklar hızlı adımlar (yerinde koşu)
+        player.rotation.x += (0.20 - player.rotation.x)*0.16;                                         // öne eğik koşu duruşu
+        player.position.y = Math.abs(Math.sin(et*11))*0.09; }                                         // her adımda zıpla
+      else if(actionKind==='lift'){                                                                   // SPOR — AĞIRLIK: iki kol baş üstüne bastırır (press), zorlanma çökmesi
+        const w=Math.max(0,Math.sin(et*3.4));
+        aL=-1.45-w*1.15; aR=-1.45-w*1.15;                                                             // omuzdan baş üstüne kaldır (-1.45 → -2.6)
+        player.rotation.x += (0.02 - player.rotation.x)*0.14;                                         // dik dur
+        player.position.y = -w*0.06; }                                                                // kaldırırken hafif çök
+      else if(actionKind==='stretch'){                                                                // SPOR — ESNEME: kollar yukarı uzanır, dönüşümlü, hafif öne
+        const w=Math.sin(et*2.2);
+        aL=-2.05+w*0.35; aR=-2.05-w*0.35;                                                             // iki kol yukarı, sırayla gökyüzüne uzanır
+        player.rotation.x += (0.10 - player.rotation.x)*0.12; }                                       // hafif öne
       else { const w=Math.sin(et*17); aL=-1.15+w*0.5; aR=-1.15-w*0.5; }                             // genel çalışma: kollar öne-aşağı
       swingLeg(PP.armL, aL); swingLeg(PP.armR, aR);
       if(actionT<=0 && actionKind==='namaz') lastActT = nowS - 11;   // namaz bitti + AFK → seccadede otur (10sn beklemeden)
     }
     // gövde eğimi: namaz/ikram sırasında pozdan; bitince ayakta dik. OTURURKEN gövde DİK dursun
     // (öne eğik komik görünüyordu → hafif geriye/dik ~ -0.04, bağdaş kuran biri gibi doğal)
-    if(!(actionT>0 && (actionKind==='namaz'||actionKind==='give'||actionKind==='hug'||actionKind==='draw'))) player.rotation.x += (sitAmount*-0.04 - player.rotation.x)*0.2;
+    if(!(actionT>0 && (actionKind==='namaz'||actionKind==='give'||actionKind==='hug'||actionKind==='draw'||actionKind==='run'||actionKind==='lift'||actionKind==='stretch'))) player.rotation.x += (sitAmount*-0.04 - player.rotation.x)*0.2;
   }
   // EMANET taşırken SOL kol dirsekten kıvrık (keseyi GÖĞÜS hizasında tutar) — dururken/yürürken/harekette HEP (son yazan → salınımı ezer)
   if(hacVortexT<=0 && S.carryPouch && PP && PP.armL){ swingLeg(PP.armL, -1.18); }   // -1.45→-1.18: el göğse iner, kese elin üstünde kalmaz
