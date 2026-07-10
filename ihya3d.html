@@ -541,7 +541,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.74</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.75</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -3480,15 +3480,33 @@ function buildBldInterior(type){ if(bldGroups[type]) return bldGroups[type];
   const recs=[], obs=[];
   if(type==='gym'){ for(const mx of [-BLD_HW+0.35, BLD_HW-0.35]) g.add(mkBox(0.08,1.8,4.5,0x9fb4c4,ox+mx,1.6,oz+1));  // yan duvarlarda ayna şeritleri (spor salonu hissi)
   }
+  const procG = (type==='gym') ? new THREE.Group() : g;   // gym: prosedürel ekipman kaldırılabilir gruba (GLB yüklenince silinir; yüklenmezse fallback)
   for(const s of cfg.st){ const bx=ox+s.bx, bz=oz+s.bz;
-    drawBldStation(g, type, s.k, bx, bz, cfg.acc);   // binaya-özel ekipman (gym: bant/sehpa/mat · market: raf · klinik: yatak · banka: gişe · cami: seccade · is: masa)
+    drawBldStation(procG, type, s.k, bx, bz, cfg.acc);   // binaya-özel ekipman (gym: bant/sehpa/mat · market: raf · klinik: yatak · banka: gişe · cami: seccade · is: masa)
     obs.push({x:bx,z:bz,r:s.r});
     const fz=bz+1.5;   // etkileşim noktası odaya doğru
     const rec={ bld:true, bldType:type, bldObj:s.k, q:{id:'b_'+type+'_'+s.k, pos:[bx,0,fz], ic:s.ic, nm:''}, g:new THREE.Object3D(), meshes:[], reach:2.6 };
     rec.g.position.set(bx,0,fz); recs.push(rec);
   }
   { const dx=ox, dz=oz+BLD_HD-1.0; const rec={ bld:true, bldType:type, bldObj:'leave', q:{id:'b_'+type+'_leave', pos:[dx,0,dz], ic:'🚪', nm:''}, g:new THREE.Object3D(), meshes:[], reach:2.6 }; rec.g.position.set(dx,0,dz); recs.push(rec); }
+  if(type==='gym'){ g.add(procG); g.__proc=procG; placeGymEquip(g, ox, oz); }   // gerçek ekipman GLB'sini yerleştir (yüklenince prosedürel fallback kalkar)
   g.__recs=recs; g.__obs=obs; scene.add(g); g.visible=false; bldGroups[type]=g; return g;
+}
+// SPOR SALONU EKİPMANI (models/gym_equipment.glb, 1.1MB statik) — runtime bbox ölçüp odaya sığdır, tabanı zemine oturt
+let gymEquipScene=null, gymEquipLoading=false;
+function placeGymEquip(g, ox, oz){
+  const add=(scn)=>{ const inst=scn.clone(true);
+    let box=new THREE.Box3().setFromObject(inst); const size=new THREE.Vector3(); box.getSize(size);
+    const sc = 7.0/Math.max(size.x||1,size.z||1); inst.scale.setScalar(sc);   // oda genişliğine (~7) sığdır
+    box=new THREE.Box3().setFromObject(inst); const c=new THREE.Vector3(); box.getCenter(c);
+    inst.position.set(ox - c.x, -box.min.y, (oz-1.5) - c.z);   // yatayda oda ortası (arka-orta), taban zeminde
+    g.add(inst);
+    if(g.__proc){ g.remove(g.__proc); g.__proc=null; }   // GLB geldi → prosedürel fallback kaldır
+  };
+  if(gymEquipScene){ add(gymEquipScene); return; }
+  if(gymEquipLoading){ return; }
+  gymEquipLoading=true;
+  loader.load('models/gym_equipment.glb?v='+MODELV, gl=>{ gymEquipScene=gl.scene; gymEquipLoading=false; add(gymEquipScene); }, undefined, e=>{ gymEquipLoading=false; });   // hata → prosedürel fallback kalır
 }
 function bldRemoveRecs(){ if(bldType&&bldGroups[bldType]){ const g=bldGroups[bldType]; for(const r of g.__recs){ const i=interactables.indexOf(r); if(i>=0) interactables.splice(i,1); } g.visible=false; } bldObstacles=[]; if(near&&near.bld) near=null; }
 function enterBld(type){ if(!BLD_INT[type]||!player) return; const g=buildBldInterior(type);
