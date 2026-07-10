@@ -541,7 +541,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.75</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.76</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -2725,8 +2725,11 @@ function prayNamaz(){
   // kerahat vakti: namaz mekruh
   if(isKerahat(gameTime)){ toast('🕗 Kerahat vakti (güneş doğuş/tepe/batış) — namaz mekruh, biraz bekle'); return; }
   namazRekat=rekatCount(vn);   // vaktin rekat sayısı (Sabah 2, Öğle/İkindi/Yatsı 4, Akşam 3; nafile 2)
-  const _preY=player.rotation.y; const _nd=namazDur(namazRekat); laySeccade(); playAction(_nd,'namaz'); player.rotation.y=_preY;   // #2 seccade kıbleye serilir; kıbleye dönüşü tick YUMUŞAK yapsın + rekatlar + her 2 rekatta teşehhüd
-  featureNamazPhase();   // bu namazda bir evreyi öne çıkar (rotasyon): uygun kamera açısı + Elbânî kaynağı
+  const ph=featureNamazPhase();   // bu namazda bir evreyi öne çıkar (rotasyon): uygun kamera açısı + Elbânî kaynağı
+  loadPrayerModel();              // GLB namaz modelini (ilk namazda) yükle → sonraki namazlarda hazır
+  const _preY=player.rotation.y; let _nd=namazDur(namazRekat); laySeccade();
+  const _gd=startGlbPrayer(ph); if(_gd>0) _nd=_gd;   // GLB hazırsa: prosedürel gizlenir, evre penceresi (t0..t0+td) oynar → süre = td
+  playAction(_nd,'namaz'); player.rotation.y=_preY;   // #2 seccade kıbleye serilir; kıbleye dönüşü tick YUMUŞAK yapsın
   if(inModern && typeof formModernCongregation==='function'){ const _c=formModernCongregation(_nd); if(_c>0) setTimeout(()=>openCongregationChoice(), _nd*1000+400); }   // SOKAKTA CEMAAT: komşular saf tutar; namaz sonu seccade hediye/al
   if(!S.qiblaLearned){ S.qiblaLearned=true; setTimeout(()=>toast('🧭 Kıbleye yöneldin — kıbleye dönmek namazın şartıdır (Bakara 144)'),700); }
   const farz = FARZ_VAKIT.includes(vn) && !S.done['ev_namaz'];
@@ -3534,7 +3537,7 @@ function activateBldObj(rec){ const k=rec.bldObj;
   else if(k==='hasta') openHastaZiyareti(rec);
   else if(k==='job') openJobBoard(rec);
   else if(k==='work') openWorkHonesty(rec);
-  else if(k==='pray'){ if(typeof playAction==='function') playAction(3,'namaz'); if(typeof featureNamazPhase==='function') featureNamazPhase(); addNur(6); dgBump('pray'); save(); refreshHUD(); sndChime(); banner('🧎 +6'+(tU('nur_suffix')||' nûr')); }
+  else if(k==='pray'){ const _p=(typeof featureNamazPhase==='function')?featureNamazPhase():null; if(typeof loadPrayerModel==='function') loadPrayerModel(); let _d=3; if(typeof startGlbPrayer==='function'){ const _g=startGlbPrayer(_p); if(_g>0) _d=_g; } if(typeof playAction==='function') playAction(_d,'namaz'); addNur(6); dgBump('pray'); save(); refreshHUD(); sndChime(); banner('🧎 +6'+(tU('nur_suffix')||' nûr')); }
 }
 function openHomeActionDialog(k){ const H=moHome(); audio();
   openDialog({ ic:'🏠', title:H.t, start:'s0', steps:{ s0:{ who:H[k].who, txt:H[k].x, opts:[
@@ -4168,31 +4171,31 @@ let namazFeatCam=null;   // bu namazda öne çıkan evrenin kamera preseti {side
 // Her namazda BİR evre öne çıkar (rotasyon): ona uygun kamera açısı + doğru edâsı + KAYNAK (Elbânî + sahih hadîs).
 // NOT: rivayet atıfları meşhur/sahih; yayın öncesi ehlince (kitap bab/sayfa) teyit edilmeli.
 const NAMAZ_PHASES=[
-  {k:'iftitah', cam:{side:0.35,R:6.6,H:3.0,lookY:1.45},
+  {k:'iftitah', cam:{side:0.35,R:6.6,H:3.0,lookY:1.45}, t0:0.2,td:4.0,
     tr:{n:'İftitah Tekbiri', f:'Eller omuz/kulak hizasına kaldırılır, "Allâhu ekber" denir; sonra sağ el sol elin üzerine GÖĞÜS üstüne konur.', s:'Elbânî, Sıfatu Salâti\'n-Nebî — Buhârî & Müslim (tekbir/ref-i yedeyn); göğüs üzeri: Ebû Dâvûd'},
     en:{n:'Opening Takbir', f:'Raise the hands to shoulder/ear level, say "Allahu akbar"; then place the right hand over the left upon the CHEST.', s:'Albani, The Prophet\'s Prayer Described — Bukhari & Muslim; hands on chest: Abu Dawud'},
     ar:{n:'تكبيرة الإحرام', f:'تُرفع اليدان حذوَ المنكبين/الأذنين ويُقال "الله أكبر"، ثم تُوضع اليمنى على اليسرى على الصدر.', s:'الألباني، صفة صلاة النبي ﷺ — البخاري ومسلم؛ على الصدر: أبو داود'}},
-  {k:'ruku', cam:{side:1.0,R:6.2,H:2.4,lookY:1.0},
+  {k:'ruku', cam:{side:1.0,R:6.2,H:2.4,lookY:1.0}, t0:6.0,td:2.5,
     tr:{n:'Rükû', f:'Sırt yere PARALEL dümdüz tutulur, baş ne kaldırılır ne eğilir; parmaklar açık eller dizlere konur. "Sübhâne Rabbiye\'l-Azîm."', s:'Elbânî — Buhârî & Ebû Dâvûd (sırtın düzlüğü, ellerin diz üzeri)'},
     en:{n:'Ruku (Bowing)', f:'Keep the back straight, PARALLEL to the ground; head neither raised nor lowered; hands on the knees, fingers spread. "Subhana Rabbiyal-Azim."', s:'Albani — Bukhari & Abu Dawud'},
     ar:{n:'الركوع', f:'يُسوّى الظهرُ موازيًا للأرض، لا يرفع رأسه ولا يخفضه؛ ويضع يديه على ركبتيه مفرِّجًا أصابعه. "سبحان ربي العظيم."', s:'الألباني — البخاري وأبو داود'}},
-  {k:'itidal', cam:{side:0.5,R:6.6,H:3.0,lookY:1.55},
+  {k:'itidal', cam:{side:0.5,R:6.6,H:3.0,lookY:1.55}, t0:8.3,td:1.5,
     tr:{n:'Kavme (Doğrulma)', f:'Rükûdan "Semiallâhu limen hamideh" ile DİMDİK doğrulup her aza yerine oturana dek durulur. "Rabbenâ ve leke\'l-hamd."', s:'Elbânî — Buhârî (i\'tidalde itmi\'nan)'},
     en:{n:'Standing (I\'tidal)', f:'Rise fully upright from ruku saying "Sami\'Allahu liman hamidah", until every bone settles. "Rabbana wa lakal-hamd."', s:'Albani — Bukhari'},
     ar:{n:'الاعتدال', f:'يعتدل قائمًا من الركوع قائلًا "سمع الله لمن حمده" حتى يرجع كلُّ عظمٍ إلى موضعه. "ربنا ولك الحمد."', s:'الألباني — البخاري'}},
-  {k:'secde', cam:{side:0.9,R:5.6,H:1.6,lookY:0.5},
+  {k:'secde', cam:{side:0.9,R:5.6,H:1.6,lookY:0.5}, t0:9.5,td:3.2,
     tr:{n:'Secde', f:'YEDİ aza üzerine secde edilir: alın+burun, iki avuç, iki diz, iki ayak parmakları. Kollar yanlardan AÇIK, karına değmez. "Sübhâne Rabbiye\'l-A\'lâ."', s:'Elbânî — Buhârî & Müslim (yedi aza); kolların açıklığı: Buhârî'},
     en:{n:'Sujud (Prostration)', f:'Prostrate on SEVEN limbs: forehead+nose, two palms, two knees, tips of the two feet. Keep the arms raised OFF the ground/belly. "Subhana Rabbiyal-A\'la."', s:'Albani — Bukhari & Muslim (seven limbs)'},
     ar:{n:'السجود', f:'يُسجد على سبعة أعضاء: الجبهة والأنف، والكفّان، والركبتان، وأطراف القدمين. ويُجافي عضديه عن جنبيه. "سبحان ربي الأعلى."', s:'الألباني — البخاري ومسلم (سبعة أعظم)'}},
-  {k:'celse', cam:{side:0.7,R:5.8,H:2.0,lookY:0.9},
+  {k:'celse', cam:{side:0.7,R:5.8,H:2.0,lookY:0.9}, t0:13.2,td:2.0,
     tr:{n:'Celse (İki Secde Arası)', f:'Sol ayak yatırılıp üzerine oturulur, sağ ayak dikilir; eller uyluk/diz üzerine konur. "Rabbiğfir lî, Rabbiğfir lî."', s:'Elbânî — Ebû Dâvûd & Nesâî'},
     en:{n:'Sitting (between prostrations)', f:'Sit on the folded left foot, keeping the right foot upright; hands on the thighs/knees. "Rabbighfir li, Rabbighfir li."', s:'Albani — Abu Dawud & Nasa\'i'},
     ar:{n:'الجلسة بين السجدتين', f:'يفترش رجله اليسرى ويقعد عليها وينصب اليمنى؛ ويضع يديه على فخذيه. "رب اغفر لي، رب اغفر لي."', s:'الألباني — أبو داود والنسائي'}},
-  {k:'tesehhud', cam:{side:0.22,R:5.0,H:2.15,lookY:1.15},
+  {k:'tesehhud', cam:{side:0.22,R:5.0,H:2.15,lookY:1.15}, t0:28.2,td:2.6,
     tr:{n:'Teşehhüd (Şehadet Parmağı)', f:'Otururken sağ elin ŞEHADET parmağıyla işaret edilir, göz ondan ayrılmaz; sol el sol uyluk üstünde. Tahiyyât okunur.', s:'Elbânî — Müslim, Ebû Dâvûd, Nesâî (parmakla işaret)'},
     en:{n:'Tashahhud (Index finger)', f:'While sitting, point with the right INDEX finger, not moving the gaze from it; the left hand rests on the left thigh. Recite the Tashahhud.', s:'Albani — Muslim, Abu Dawud, Nasa\'i'},
     ar:{n:'التشهد (الإشارة بالسبابة)', f:'وهو جالس يشير بسبّابةِ يده اليمنى ولا يجاوز بصرُه إشارتَه؛ ويده اليسرى على فخذه اليسرى. ويقرأ التحيات.', s:'الألباني — مسلم وأبو داود والنسائي'}},
-  {k:'selam', cam:{side:0.3,R:6.0,H:2.6,lookY:1.4},
+  {k:'selam', cam:{side:0.3,R:6.0,H:2.6,lookY:1.4}, t0:30.2,td:0.6,
     tr:{n:'Selâm', f:'Baş önce SAĞA, sonra SOLA çevrilerek "es-Selâmü aleyküm ve rahmetullâh" denir.', s:'Elbânî — Müslim (sağa ve sola selâm)'},
     en:{n:'Salam', f:'Turn the head first to the RIGHT, then to the LEFT, saying "As-salamu alaykum wa rahmatullah".', s:'Albani — Muslim'},
     ar:{n:'السلام', f:'يلتفت برأسه يمينًا ثم شمالًا قائلًا "السلام عليكم ورحمة الله".', s:'الألباني — مسلم'}},
@@ -4204,6 +4207,42 @@ function featureNamazPhase(){   // bu namazda öne çıkan evreyi seç (rotasyon
   setTimeout(()=>{ banner('🕌 '+t.n); }, 500);
   setTimeout(()=>{ toast('🕌 '+t.n+' — '+t.f+'  📖 '+(tU('namaz_src')||'Kaynak')+': '+t.s); }, 1200);
   return ph;
+}
+// ---- NAMAZ GLB MODELİ (models/prayer.glb, 30.8sn tam 2-rekât Mixamo) — namazda prosedürel karakter yerine oynar ----
+// Her namazda öne çıkan evrenin zaman penceresine (t0..t0+td) seek edilir → o evre yakından, uygun açıdan görünür.
+// FALLBACK: GLB yüklü değilse (ilk namaz / hata) prosedürel namaz (namazPoseN) devreye girer — namaz HER ZAMAN çalışır.
+let prayerScene=null, prayerMixer=null, prayerAction=null, prayerLoading=false, prayerModel=null, prayerActive=false, prayerScale=0.01, prayerGlbEnd=0;
+let PRAYER_YAW=Math.PI;   // GLB modelinin kıbleye hizası (ince ayar — cihazda düzeltilebilir: __ihya3d.setPrayerYaw)
+function loadPrayerModel(){
+  if(prayerScene||prayerLoading) return;
+  prayerLoading=true;
+  loader.load('models/prayer.glb?v='+MODELV, gl=>{
+    prayerScene=gl.scene; prayerLoading=false;
+    const box=new THREE.Box3().setFromObject(prayerScene); const sz=new THREE.Vector3(); box.getSize(sz);
+    prayerScale = 1.9/(sz.y||190);                       // oyuncu boyuna (~1.9) ölçekle
+    prayerModel=prayerScene; prayerModel.scale.setScalar(prayerScale); prayerModel.visible=false; scene.add(prayerModel);
+    prayerMixer=new THREE.AnimationMixer(prayerModel);
+    const clip=gl.animations&&gl.animations[0];
+    if(clip){ prayerAction=prayerMixer.clipAction(clip); prayerAction.play(); prayerAction.paused=true; }
+  }, undefined, e=>{ prayerLoading=false; });
+}
+function startGlbPrayer(phase){   // dönüş: GLB kullanıldıysa evre süresi (sn), yoksa 0 (prosedürel fallback)
+  if(!prayerModel||!prayerAction||!phase||!player) return 0;
+  const t0=phase.t0!=null?phase.t0:0, td=phase.td!=null?phase.td:4;
+  prayerModel.position.set(player.position.x, 0, player.position.z);
+  prayerModel.rotation.y = player.rotation.y + PRAYER_YAW;    // kıbleye hizala
+  prayerModel.scale.setScalar(prayerScale); prayerModel.visible=true;
+  player.visible=false;                                        // prosedürel karakteri gizle (GLB oynar)
+  prayerAction.paused=false; prayerAction.time=t0; if(prayerMixer) prayerMixer.update(0);
+  prayerActive=true; prayerGlbEnd=t0+td;
+  return td;
+}
+function stopGlbPrayer(){ if(!prayerActive) return; prayerActive=false; if(prayerModel) prayerModel.visible=false; if(player) player.visible=true; }
+function updateGlbPrayer(dt){ if(!prayerActive||!prayerMixer) return;
+  prayerMixer.update(dt);
+  if(prayerModel&&player){ prayerModel.position.set(player.position.x,0,player.position.z); prayerModel.rotation.y=player.rotation.y+PRAYER_YAW; }
+  if(prayerAction&&prayerAction.time>=prayerGlbEnd){ prayerAction.time=prayerGlbEnd; prayerAction.paused=true; }   // evre sonunda dur (huşû)
+  if(!(actionT>0 && actionKind==='namaz')) stopGlbPrayer();                                                       // namaz bitti → prosedürele/normale dön
 }
 let SIT_FOLD=-1.0, SIT_CROSS=-1.15;   // bağdaş: bacak ÖNE katlanır (negatif fold=ön) + dizler dışa/ayaklar içe yaw (setSitLegs ile ayarlanabilir)
 // OCCLUSION: kamera ile oyuncu arasında dev palmiye kalırsa kamerayı yukarı kaldır (palmiyenin üstünden bak)
@@ -7346,6 +7385,7 @@ function tick(){
     const m=meclisRoof.material, tgt=under?0.10:1; m.transparent=under||m.opacity<0.99;   // daha net saydam
     m.opacity += (tgt-m.opacity)*0.18; m.depthWrite=m.opacity>0.9; if(m.opacity>0.995){m.opacity=1;m.transparent=false;} }
   updateGuideBeacon();
+  if(typeof updateGlbPrayer==='function') updateGlbPrayer(dt);   // NAMAZ GLB modeli oynatma (evre penceresi) — aktifse
   if(typeof updateGuardian==='function') updateGuardian(dt);   // evden çıkış duası → koruyucu melek eşliği
   if(typeof updateAngelHost==='function') updateAngelHost(dt);   // hasta ziyareti → 70.000 melek ışık halkası
 
@@ -7517,6 +7557,7 @@ console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalo
     marketBuilt:()=>!!marketRec,
     enterMosque:()=>enterMosque(), exitMosque:()=>exitMosque(), mosqueAct:(k)=>window.__mosqueAct(k),
     enterHac:(full)=>enterHac(full), exitHac:()=>exitHac(), hacAct:(k)=>window.__hacAct(k), hacState:()=>({mode:hacMode, ...hacState}), startFullHajj:()=>startFullHajj(), openHacReg:()=>openHacReg(), hajjReg:()=>S.hajjReg,
+    setPrayerYaw:(r)=>{ PRAYER_YAW=r; return PRAYER_YAW; }, prayerState:()=>({loaded:!!prayerModel, active:prayerActive, scale:+prayerScale.toFixed(4), yaw:+PRAYER_YAW.toFixed(2), end:prayerGlbEnd}), loadPrayer:()=>loadPrayerModel(),
     enterModern:()=>enterModern(), exitModern:()=>exitModern(), unlockModern:()=>{ S.modernUnlocked=true; save(); updateModernBtn(); return true; }, modernState:()=>({unlocked:S.modernUnlocked, inModern, built:modernBuilt, job:S.modernJob, recs:modernRecs.map(r=>r.modern)}), openModern:(k)=>{ const r=modernRecs.find(x=>x.modern===k); if(r) openModernBuilding(r); return !!r; },
     busState:()=>modernBus?{theta:+modernBus.theta.toFixed(2), state:modernBus.state, pos:[Math.round(modernBus.g.position.x),Math.round(modernBus.g.position.z)], passenger:!!modernBus.passenger}:null,
     mosqueState:()=>({mode:mosqueMode, cumaDone:S.cumaDone, sat:S.mosqueSat, interiorNodes:mosqueGroup?mosqueGroup.children.length:0}),
