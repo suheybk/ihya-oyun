@@ -542,7 +542,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.84</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.85</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -7866,7 +7866,12 @@ function introTick(dt){
 console.log('%cİHYA sürüm: Faz 11.30 — SENARYO MEKANİĞİ: 13 model diyalog+göreve bağlandı. BARIŞTIRMA (arg_villager_a/b+dispute_item, 💢 tartışma → sulh diyaloğu → nûr+huzur, davet quest) · KADI/ADALET (qadi+tüccar+çoban, delile göre hüküm, adalet quest) · EMANET TAŞIMA (trust_owner kese verir→ele takılır→Mahalle\'deki kardeşe teslim, emanet quest) · DİLENCİ (beggar, dirhem/yiyecek→gizli sadaka+careAllNeedy) · SEBİL/GÖLGELİK inşa (public_fountain/shade_bench, Hayır Çeşmesi paneli, hayir quest) · taharet door→mud_doorway. Yeni #dlg diyalog motoru. (önceki: Umre girdabı Z-roll, horoz ezan habercisi) karakter ETRAFINDA Z-ROLL (ekran döner, ÖNCE yavaş ~1 tur SONRA hızlanan tur, kamera sabit yön + zoom) + karakter girdaba kapılır (kollar çırpınır/batar/küçülür) → Kâbe 360° orbit. HOROZ: yakınlık değil — ezandan 15 sn önce HER adadan hafif öter (kuşluk öncesi güçlü=güneş doğuşu), tavuk daha sık. (önceki: sinematik kamera+occlusion, su çekme, altyazı, muâhât sarılma, bağdaş, güneş-ay geçişi, 13 model kayıtlı+kümes)','color:#8fce58;font-weight:bold');
 (async()=>{
   let n=0;
-  for(const m of MODELS){ await load(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
+  // DAYANIKLI YÜKLEME: bir modelin ağ isteği STALL olursa (ne başarı ne hata callback'i) boot sonsuza dek
+  // "Dünya diriltiliyor"da kilitlenmesin → her modele 15sn timeout; takılan/eksik model ATLANIR (instance() zaten
+  // placeholder kutu döndürür). Böylece cache-bust/yavaş bağlantıda oyun her hâlükârda açılır (self-healing).
+  const loadSafe=(m)=>Promise.race([ load(m).catch(e=>{ console.warn('model load fail',m,e); }),
+    new Promise(r=>setTimeout(()=>{ console.warn('model timeout, skip',m); r(); },15000)) ]);
+  for(const m of MODELS){ await loadSafe(m); loadBar.style.width=(++n/MODELS.length*100)+'%'; }
   setVakitQuests(vakitOf(gameTime)[1]);   // vakte göre ev ibadetlerini kur
   migrateConquered();               // eski kayıt: tamamlanmış adaları kalıcı fethe işle
   // istikamet: son tamamlanan gün ne bu gün ne dün ise (dayNum) zincir kırılmış → sıfırla
