@@ -542,7 +542,7 @@
   </div>
 </div>
 
-<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.83</div>
+<div id="verBadge" style="position:fixed;left:50%;transform:translateX(-50%);bottom:5px;z-index:40;font:700 10px system-ui,sans-serif;color:#8fce58;opacity:.42;pointer-events:none;text-shadow:0 1px 2px #000;letter-spacing:.08em">İhya · Faz 6.84</div>
 <div id="animDbg" style="position:fixed;left:8px;top:120px;z-index:60;max-width:280px;display:none;background:#c0142088;color:#fff;font:700 11px system-ui,monospace;padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre-line;box-shadow:0 2px 8px #0006"></div>
 
 <div id="prompt"></div>
@@ -3064,6 +3064,19 @@ function exitHac(){ hacMode=false; hacVortexT=0; warpBlock=false; document.body.
 function setHacDayNight(frac){ try{ gameTime=frac; if(typeof updateDayNight==='function') updateDayNight(0); }catch(e){} }   // Arafat=gündüz, Müzdelife=gece atmosferi
 const STONES_NEED=21;   // 3 cemre × 7 taş
 function jamName(i){ return [ {ic:'🔸',nm:(tU('hj_jam_small')||'Küçük Cemre (Suğrâ)')}, {ic:'🔹',nm:(tU('hj_jam_mid')||'Orta Cemre (Vustâ)')}, {ic:'🔺',nm:(tU('hj_jam_big')||'Akabe Cemresi (Büyük)')} ][Math.max(0,Math.min(2,i|0))]; }
+// HAC ZAMAN-ÇİZELGESİ ROZETİ: her evrede Zilhicce günü (Hac) + mekân + kaçıncı menzil — öğretici, panel başında
+const HAC_ORDER_FULL=['ihram','arafat','muzdelife','cemre','kurban','tavaf','namaz','say','tiras'];
+const HAC_ORDER_UMRE=['ihram','tavaf','namaz','say','tiras'];
+const HAC_PLACE={ ihram:{tr:'Mîkāt / İhrâm',en:'Miqat / Ihram',ar:'الميقات / الإحرام'}, arafat:{tr:'Arafat',en:'Arafat',ar:'عرفات'}, muzdelife:{tr:'Müzdelife',en:'Muzdalifah',ar:'المزدلفة'}, cemre:{tr:'Mina — Cemre',en:'Mina — Jamarat',ar:'مِنى — الجمرات'}, kurban:{tr:'Mina — Kurban',en:'Mina — Sacrifice',ar:'مِنى — الأضحية'}, tavaf:{tr:'Kâbe — Tavâf',en:'Kaaba — Tawaf',ar:'الكعبة — الطواف'}, namaz:{tr:'Makām-ı İbrâhîm',en:'Maqam Ibrahim',ar:'مقام إبراهيم'}, say:{tr:'Mes\'â — Sa\'y',en:'Masʿa — Saʿy',ar:'المسعى — السعي'}, tiras:{tr:'Mina — Tıraş',en:'Mina — Shaving',ar:'مِنى — الحلق'} };
+const HAC_DAY={ ihram:{tr:'Zilhicce 8 · Terviye',en:'Dhul-Hijjah 8 · Tarwiyah',ar:'ذو الحجة ٨ · التروية'}, arafat:{tr:'Zilhicce 9 · Arefe',en:'Dhul-Hijjah 9 · Arafah',ar:'ذو الحجة ٩ · عرفة'}, muzdelife:{tr:'Zilhicce 9 gecesi',en:'Night of Dhul-Hijjah 9',ar:'ليلة ٩ ذو الحجة'}, cemre:{tr:'Zilhicce 10 · Bayram',en:'Dhul-Hijjah 10 · Eid',ar:'ذو الحجة ١٠ · العيد'}, kurban:{tr:'Zilhicce 10 · Bayram',en:'Dhul-Hijjah 10 · Eid',ar:'ذو الحجة ١٠ · العيد'}, tavaf:{tr:'Zilhicce 10',en:'Dhul-Hijjah 10',ar:'ذو الحجة ١٠'}, namaz:{tr:'Zilhicce 10',en:'Dhul-Hijjah 10',ar:'ذو الحجة ١٠'}, say:{tr:'Zilhicce 10',en:'Dhul-Hijjah 10',ar:'ذو الحجة ١٠'}, tiras:{tr:'Zilhicce 10',en:'Dhul-Hijjah 10',ar:'ذو الحجة ١٠'} };
+function hacBadge(P){ const L=(S.lang==='en'||S.lang==='ar')?S.lang:'tr';
+  const pl=(HAC_PLACE[P.phase]||{})[L]||(HAC_PLACE[P.phase]||{}).tr||'';
+  const order=P.full?HAC_ORDER_FULL:HAC_ORDER_UMRE; const idx=order.indexOf(P.phase); const menzil=idx>=0?(idx+1)+'/'+order.length:'';
+  let s='📍 '+pl;
+  if(P.full){ const dy=(HAC_DAY[P.phase]||{})[L]||(HAC_DAY[P.phase]||{}).tr||''; if(dy) s='🗓️ '+dy+'  ·  '+s; }
+  if(menzil) s+='  ·  '+menzil;
+  return s;
+}
 function renderHac(){
   const st=document.getElementById('hacStep'), body=document.getElementById('hacBody'); if(!body)return;
   const P=hacState; let title='', h='';
@@ -3115,7 +3128,8 @@ function renderHac(){
     h+='<button class="do" onclick="__hacAct(\'tiras\')">'+(P.full ? (tU('hj_tiras_btn')||'✂️ Tıraş ol — Hac\'cı tamamla (+60 nûr)') : (tU('hac_tiras_btn')||'✂️ Tıraş ol — Umre\'yi tamamla (+40 nûr)'))+'</button>'; }
   if(st) st.textContent=title;
   h+='<button class="cl" onclick="__hacAct(\'exit\')">'+(tU('hac_exit')||'🚪 Mekke\'den ayrıl')+'</button>';
-  body.innerHTML=h;
+  const _badge='<div class="sub" style="margin:0 0 10px;font-weight:700;color:#8fce58;font-size:.9em;letter-spacing:.02em">'+hacBadge(P)+'</div>';   // zaman-çizelgesi/menzil rozeti
+  body.innerHTML=_badge+h;
 }
 window.__hacAct=function(kind){
   audio(); const P=hacState;
